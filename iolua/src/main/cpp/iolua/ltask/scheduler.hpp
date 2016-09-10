@@ -51,8 +51,9 @@ namespace iolua {
 
         private:
             lua_State                               *_L;
+			int										_exitCode;
             bool                                    _exit;
-            std::atomic<uint32_t>                   _idgen;
+            std::atomic<uint32_t>                   _idgen = 0;
             std::unordered_map<task_id,task*>       _tasks;
             lemon::shared_mutex                     _mutex;
             std::condition_variable_any             _cv;

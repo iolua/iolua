@@ -93,13 +93,13 @@ namespace iolua {
 
             int n = lua_gettop(L);
 
-            uint32_t channels[n];
+            std::vector<uint32_t> channels(n);
 
             for (int i=0; i<n; i++) {
                 channels[i] = (uint32_t)luaL_checkinteger(L, i+1);
             }
 
-            lua_pushinteger(L, tk->owner()->channel_select(tk->id(),channels,n));
+            lua_pushinteger(L, tk->owner()->channel_select(tk->id(),&channels[0],n));
 
             return 1;
         }

@@ -65,6 +65,11 @@ namespace lemon {
     };
 }
 #else
+#include <shared_mutex>
+
+namespace lemon {
+	using shared_mutex = std::shared_mutex;
+}
 
 #endif
 
