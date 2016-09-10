@@ -1,3 +1,13 @@
+
+if(WIN32)
+    add_definitions(/DLEMOON_BUILD /wd4244 /D_UNICODE)
+elseif(APPLE)
+    add_definitions(-D_BSD_SOURCE)
+else()
+    add_definitions(-D_POSIX_SOURCE -DLUA_USE_LINUX)
+endif()
+
+
 file(GLOB_RECURSE src_files
         ${CMAKE_CURRENT_SOURCE_DIR}/*.c
         ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp

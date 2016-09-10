@@ -6,7 +6,7 @@ CHECK_INCLUDE_FILES (sys/epoll.h LEMOON_HAS_EPOLL_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lemon/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/lemon/config.h IMMEDIATE)
 
 if(WIN32)
-    add_definitions(/DLEMOON_BUILD /wd4311 /D_UNICODE)
+    add_definitions(/DLEMOON_BUILD /wd4311 /wd4310	 /D_UNICODE)
 elseif(APPLE)
     add_definitions(-D_BSD_SOURCE)
 else()

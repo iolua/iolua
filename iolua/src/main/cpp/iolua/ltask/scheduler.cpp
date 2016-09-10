@@ -35,6 +35,8 @@ namespace iolua {
 
             _exit = true;
 
+			_exitCode = code;
+
             _cv.notify_all();
         }
 
@@ -49,7 +51,7 @@ namespace iolua {
             }
         }
 
-        uint32_t scheduler::create_channel(lua_State *L)
+        uint32_t scheduler::create_channel(lua_State * /*L*/)
         {
             uint32_t id;
 

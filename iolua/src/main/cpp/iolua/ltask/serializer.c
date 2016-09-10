@@ -3,6 +3,7 @@
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
 #include "serializer.h"
+#include <stdint.h>
 
 #define TYPE_NIL 0
 #define TYPE_BOOLEAN 1
@@ -503,9 +504,10 @@ _get_pointer(lua_State *L, struct read_block *rb) {
 
 static void
 _get_buffer(lua_State *L, struct read_block *rb, int len) {
-    char tmp[len];
+    char *tmp = malloc(len);
     char * p = rb_read(rb,tmp,len);
     lua_pushlstring(L,p,len);
+	free(tmp);
 }
 
 static void _unpack_one(lua_State *L, struct read_block *rb);
