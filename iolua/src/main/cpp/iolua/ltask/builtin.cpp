@@ -280,7 +280,7 @@ namespace iolua {
 
 				{ "bind",ltask_bind } ,
 
-				{ "connect",ltask_connect } ,
+				{ "raw_connect",ltask_connect } ,
 
 				{ "wait",ltask_wait } ,
 
@@ -297,7 +297,12 @@ namespace iolua {
                             "end\n"
                             "coroutine.yield()\n"
                         "end\n"
-                "end\n";
+                "end\n"
+				"iolua.connect = function(...)\n"
+					"local future = iolua.raw_connect(...)\n"
+					"coroutine.yield()\n"
+					"return iolua.wait(future)\n"
+				"end\n";;
 
         void ltask_open_libs(task * tk)
         {
