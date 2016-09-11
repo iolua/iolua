@@ -13,7 +13,8 @@
 #include <lemon/mutex.hpp>
 #include <iolua/ltask/task.hpp>
 #include <iolua/ltask/channel.hpp>
-
+#include <lemon/io/io.hpp>
+#include <iolua/ltask/io_object_map.hpp>
 namespace iolua {
     namespace ltask {
 
@@ -45,9 +46,16 @@ namespace iolua {
 
             void resume(task_id task);
 
+			io_object_map& io_objects()
+			{
+				return _io_object_map;
+			}
+
         private:
 
             void do_schedule();
+
+			void do_io_schedule();
 
         private:
             lua_State                               *_L;
@@ -61,6 +69,9 @@ namespace iolua {
             std::queue<task*>                       _runningTasks;
             std::unordered_map<task_id,task*>       _sleepingTasks;
             std::unordered_map<uint32_t ,channel*>  _channels;
+			lemon::io::io_service					_io_service;
+			std::thread								_io_thread;
+			io_object_map							_io_object_map;
         };
     }
 }

@@ -99,6 +99,10 @@ namespace lemon{
 
 			}
 
+			const address & addr() const {
+				return _addr;
+			}
+
 		private:
 
 			static void read_complete(iocp_connect_op* op)
@@ -133,7 +137,7 @@ namespace lemon{
 
 			void bind(const address & addr,std::error_code ec) noexcept
 			{
-				if (0 == ::bind((SOCKET)get(), addr, addr.length()))
+				if (0 != ::bind((SOCKET)get(), addr, addr.length()))
 				{
 					ec = std::error_code(WSAGetLastError(),std::system_category());
 				}
@@ -141,7 +145,7 @@ namespace lemon{
 
 			void listen(int backlog, std::error_code ec) noexcept
 			{
-				if (0 == ::listen((SOCKET)get(), backlog))
+				if (0 != ::listen((SOCKET)get(), backlog))
 				{
 					ec = std::error_code(WSAGetLastError(), std::system_category());
 				}
@@ -208,11 +212,11 @@ namespace lemon{
 					if (ec) return;
 				}
 
-				lemon::io::addrinfo addinfo = getaddrinfo("", "0", _af, _type, AI_CANONNAME)[0];
+				lemon::io::addrinfo addinfo = getaddrinfo(addr.host(), "0", _af, _type, AI_CANONNAME)[0];
 
-				bind(addinfo.addr(),ec);
+				bind(addinfo.addr(), ec);
 
-				if(ec)
+				if (ec)
 				{
 					return;
 				}
@@ -281,6 +285,18 @@ namespace lemon{
 				}
 
 				op.release();
+			}
+
+			int af() const {
+				return _af;
+			}
+
+			int protocol() const {
+				return _protocol;
+			}
+
+			int type() const {
+				return _type;
 			}
 
 		private:

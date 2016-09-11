@@ -9,7 +9,7 @@ namespace iolua {
         static auto& logger = lemon::log::get("ltask");
 
         scheduler::scheduler(int threads)
-            :_exit(false)
+            :_exit(false), _io_object_map(_io_service)
         {
             for( int i = 0; i < threads; i ++ )
             {
@@ -21,6 +21,8 @@ namespace iolua {
             if (_L == nullptr) {
                 throw std::system_error(make_error_code(errc::out_of_memory));
             }
+
+			_io_thread = std::thread(&scheduler::do_io_schedule, this);
         }
 
         scheduler::~scheduler()
@@ -38,6 +40,8 @@ namespace iolua {
 			_exitCode = code;
 
             _cv.notify_all();
+
+			_io_service.close();
         }
 
         void scheduler::join()
@@ -49,6 +53,12 @@ namespace iolua {
                     t.join();
                 }
             }
+
+			if(_io_thread.joinable()) 
+			{
+				_io_thread.join();
+			}
+
         }
 
         uint32_t scheduler::create_channel(lua_State * /*L*/)
@@ -246,5 +256,18 @@ namespace iolua {
             lemonW(logger,"resume task(%d) -- failed not found",id);
         }
 
+
+		void scheduler::do_io_schedule()
+		{
+			while (true)
+			{
+				std::error_code ec;
+				_io_service.run_one(ec);
+
+				if(ec == lemon::io::errc::io_service_closed){
+					break;
+				}
+			}
+		}
     }
 }

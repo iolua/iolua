@@ -11,8 +11,8 @@ test_(socket)
 {
 	io_service ioservice;
 
-	auto addrinfo = lemon::io::getaddrinfo("", "1812", AF_INET, SOCK_STREAM, AI_PASSIVE)[0];
-
+	auto addrinfo = lemon::io::getaddrinfo("localhost", "1812", AF_INET, SOCK_STREAM, AI_PASSIVE)[0];
+	
 	io_socket_acceptor acceptor(ioservice, addrinfo.af(), addrinfo.type(), addrinfo.protocol());
 
 	acceptor.bind(addrinfo.addr());
@@ -52,8 +52,8 @@ test_(socket)
 
 	});
 	
-	
 	io_stream_socket client(ioservice, AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
 
 	client.connect(addrinfo.addr(),[&](const std::error_code& ec){
 		if(ec)

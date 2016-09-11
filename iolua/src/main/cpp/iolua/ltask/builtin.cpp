@@ -106,6 +106,123 @@ namespace iolua {
             return 1;
         }
 
+		int ltask_socket(lua_State * L) {
+
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			lua_pushinteger(L,io_objects.create_socket(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2),luaL_checkinteger(L, 3)));
+
+			return 1;
+		}
+
+		int ltask_bind(lua_State * L) {
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects.get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)", id);
+
+				return 0;
+			}
+
+			std::error_code ec;
+
+			auto host = luaL_checkstring(L,2);
+
+			auto port = luaL_checkstring(L, 3);
+
+			auto addresses = lemon::io::getaddrinfo(host, port, (*sock)->af(),(*sock)->type(), AI_PASSIVE,ec);
+
+			if(ec) {
+				return luaL_error(L, "getaddrinfo(%s:%s) error :%s",host, port, ec.message().c_str());
+			}
+
+			for( auto address : addresses) {
+				
+				(*sock)->bind(address.addr(),ec);
+
+				if(ec) {
+					return luaL_error(L, "sock(%d) bind(%s:%s) error :%s", id, host, port, ec.message().c_str());
+				}
+			}
+
+			return 0;
+		}
+
+		int ltask_listen(lua_State * L) {
+
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects.get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)",id);
+
+				return 0;
+			}
+
+			std::error_code ec;
+
+			(*sock)->listen(SOMAXCONN, ec);
+
+			return 0;
+		}
+
+		int ltask_connect(lua_State * L) {
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects.get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)", id);
+
+				return 0;
+			}
+
+			std::error_code ec;
+
+			auto host = luaL_checkstring(L, 2);
+
+			auto port = luaL_checkstring(L, 3);
+
+			auto addresses = lemon::io::getaddrinfo(host, port, (*sock)->af(), (*sock)->type(), AI_PASSIVE, ec);
+
+			if (ec) {
+				return luaL_error(L, "getaddrinfo(%s:%s) error :%s", host, port, ec.message().c_str());
+			}
+
+			for (auto address : addresses) {
+
+				(*sock)->connect(address.addr(),[](const std::error_code& ec){
+					lemonI(logger, "connect result :%s", ec.message().c_str());
+				},ec);
+
+				if (ec) {
+					return luaL_error(L, "sock(%d) bind(%s:%s) error :%s", id, host, port, ec.message().c_str());
+				}
+			}
+
+			return 0;
+		}
+
         static luaL_Reg funcs[] = {
 
                 { "task",ltask_open } ,
@@ -119,6 +236,16 @@ namespace iolua {
                 { "raw_recv",ltask_chan_recv } ,
 
                 { "select",ltask_chan_select } ,
+
+				{ "select",ltask_chan_select } ,
+
+				{ "sock",ltask_socket } ,
+
+				{ "listen",ltask_listen } ,
+
+				{ "bind",ltask_bind } ,
+
+				{ "connect",ltask_connect } ,
 
                 { NULL, NULL }
         };

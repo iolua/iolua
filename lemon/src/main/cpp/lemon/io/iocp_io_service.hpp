@@ -65,7 +65,7 @@ namespace lemon{
 
 			~iocp_io_service()
 			{
-				CloseHandle(_handler);
+				close();
 			}
 
 			void run_one(std::error_code & ec) noexcept
@@ -135,6 +135,11 @@ namespace lemon{
 				{
 					// TODO: log the error
 				}
+			}
+
+			void close()
+			{
+				CloseHandle(_handler);
 			}
 
 		private:
