@@ -67,6 +67,13 @@ namespace lemon{
 				*this = std::forward<address>(rhs);
 			}
 
+			address & operator = (const address & rhs)
+			{
+				address(rhs).swap(*this);
+
+				return *this;
+			}
+
 			address & operator = (address && rhs)
 			{
 				_buff = std::move(rhs._buff);
@@ -76,6 +83,13 @@ namespace lemon{
 				rhs._len = 0;
 
 				return *this;
+			}
+
+			void swap(address & rhs)
+			{
+				std::swap(_buff, rhs._buff);
+
+				std::swap(_len, rhs._len);
 			}
 
 			operator sockaddr*()

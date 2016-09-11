@@ -30,6 +30,11 @@ namespace lemon{ namespace io{
 		return{ source,N };
 	}
 
+	inline const_buffer cbuff(const char * source, size_t N)
+	{
+		return{ source,N };
+	}
+
 	inline const_buffer cbuff(const char * source)
 	{
 		return { source,strlen(source) };

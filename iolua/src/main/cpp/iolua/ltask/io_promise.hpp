@@ -19,6 +19,8 @@ namespace iolua {
 
 			virtual int raise_promise(lua_State *L) = 0;
 
+			virtual ~io_promise() {}
+
 		private:
 			uint32_t						_id;
 		};
@@ -48,6 +50,107 @@ namespace iolua {
 			std::error_code		_ec;
 		};
 
+		class send_io_promise : public io_promise
+		{
+		public:
+			using io_promise::io_promise;
+
+			void complete(size_t trans, const std::error_code & ec)
+			{
+				_ec = ec;
+				_trans = trans;
+			}
+
+			int raise_promise(lua_State *L)
+			{
+				if (_ec) {
+					lua_pushboolean(L, false);
+					lua_pushstring(L, _ec.message().c_str());
+					return 2;
+				}
+				else {
+					lua_pushboolean(L, true);
+					lua_pushinteger(L, _trans);
+					return 2;
+				}
+			}
+		private:
+			std::error_code		_ec;
+			size_t				_trans;
+		};
+
+		class accept_io_promise : public io_promise
+		{
+		public:
+			using io_promise::io_promise;
+
+			void complete(io_object_id id, const lemon::io::address & addr, const std::error_code & ec)
+			{
+				_ec = ec;
+				_obj = id;
+				_addr = addr;
+			}
+
+			int raise_promise(lua_State *L)
+			{
+				if (_ec) {
+					lua_pushboolean(L, false);
+					lua_pushstring(L, _ec.message().c_str());
+					return 2;
+				}
+				else {
+					lua_pushboolean(L, true);
+					lua_pushinteger(L, _obj);
+					lua_pushstring(L, _addr.host().c_str());
+					lua_pushinteger(L, _addr.service());
+					return 4;
+				}
+			}
+		private:
+			std::error_code					_ec;
+			lemon::io::address				_addr;
+			io_object_id					_obj;
+		};
+
+		class recv_io_promise : public io_promise
+		{
+		public:
+			recv_io_promise(size_t maxlength, uint32_t id):io_promise(id), _buff(maxlength)
+			{
+
+			}
+
+			void complete(size_t trans, const std::error_code & ec)
+			{
+				_ec = ec;
+				_trans = trans;
+			}
+
+			int raise_promise(lua_State *L)
+			{
+				if (_ec) {
+					lua_pushboolean(L, false);
+					lua_pushstring(L, _ec.message().c_str());
+					return 2;
+				}
+				else {
+					lua_pushboolean(L, true);
+					lua_pushlstring(L, (const char*)&_buff[0], _trans);
+					return 2;
+				}
+			}
+
+			lemon::io::buffer buff()
+			{
+				return { &_buff[0], _buff.size() };
+			}
+
+		private:
+			std::error_code			_ec;
+			size_t					_trans;
+			std::vector<char>		_buff;
+		};
+
 
 		class io_promise_map : lemon::nocopy
 		{
@@ -59,6 +162,43 @@ namespace iolua {
 				auto id = newid();
 
 				_promises[id] = new connect_io_promise(id);
+
+				return id;
+			}
+
+			uint32_t create_send_io_promise()
+			{
+				std::unique_lock<lemon::spin_mutex>	lock(_mutex);
+
+				auto id = newid();
+
+				_promises[id] = new send_io_promise(id);
+
+				return id;
+			}
+
+			uint32_t create_accept_io_promise()
+			{
+				std::unique_lock<lemon::spin_mutex>	lock(_mutex);
+
+				auto id = newid();
+
+				_promises[id] = new accept_io_promise(id);
+
+				return id;
+			}
+
+			uint32_t create_recv_io_promise(size_t maxlength, lemon::io::buffer & buff)
+			{
+				std::unique_lock<lemon::spin_mutex>	lock(_mutex);
+
+				auto id = newid();
+
+				auto promise = new recv_io_promise(maxlength, id);
+
+				_promises[id] = promise;
+
+				buff = promise->buff();
 
 				return id;
 			}

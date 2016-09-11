@@ -22,19 +22,24 @@ namespace iolua {
 		public:
 			template<typename ... _Args>
 			io_object(_Args &&...args)
-				:_counter(1),_object(std::forward<_Args>(args)...)
+				:_counter(1)
+			{
+				_object = new _Type(std::forward<_Args>(args)...);
+			}
+
+			io_object(_Type * obj):_counter(1),_object(obj)
 			{
 
 			}
 
 			~io_object()
 			{
-
+				delete _object;
 			}
 
 			_Type * operator -> ()
 			{
-				return &_object;
+				return _object;
 			}
 
 			const _Type * operator -> () const
@@ -56,7 +61,7 @@ namespace iolua {
 
 		private:
 			std::atomic<uint32_t>	_counter;
-			_Type					_object;
+			_Type					*_object;
 		};
 
 		using io_socket = io_object<lemon::io::io_socket>;
@@ -72,6 +77,8 @@ namespace iolua {
 			void close_socket(io_object_id id);
 
 			io_socket* get_socket(io_object_id id);
+
+			io_object_id attach(lemon::io::io_socket * sock);
 		private:
 
 			io_object_id newid();

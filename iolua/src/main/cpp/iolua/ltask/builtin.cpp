@@ -181,6 +181,146 @@ namespace iolua {
 			return 0;
 		}
 
+		int ltask_send(lua_State * L) {
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects.get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)", id);
+
+				return 0;
+			}
+
+			size_t length;
+			
+			const char* buff = luaL_checklstring(L, 2, &length);
+
+			auto io_promies = &tk->owner()->io_promises();
+
+			auto promiseid = io_promies->create_send_io_promise();
+
+			auto taskid = tk->id();
+			
+			auto sc = tk->owner();
+
+			int flags = 0;
+
+			if(lua_type(L,3) == LUA_TNUMBER) {
+				flags = luaL_checkinteger(L, 3);
+			}
+
+			(*sock)->send(lemon::io::cbuff(buff,length), flags, [=](size_t trans, const std::error_code& ec) {
+				auto promise = io_promies->get_promise(promiseid);
+
+				if (promise) {
+					reinterpret_cast<send_io_promise*>(promise)->complete(trans, ec);
+
+					sc->resume(taskid);
+				}
+			});
+
+			lua_pushinteger(L, promiseid);
+
+			return 1;
+		}
+
+		int ltask_recv(lua_State * L) {
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto & io_objects = tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects.get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)", id);
+
+				return 0;
+			}
+
+			auto io_promies = &tk->owner()->io_promises();
+			
+			lemon::io::buffer buff;
+
+			auto promiseid = io_promies->create_recv_io_promise(luaL_checkinteger(L, 2),buff);
+
+			auto taskid = tk->id();
+
+			auto sc = tk->owner();
+
+			int flags = 0;
+
+			if (lua_type(L, 3) == LUA_TNUMBER) {
+				flags = luaL_checkinteger(L, 3);
+			}
+
+			(*sock)->recv(buff, flags, [=](size_t trans, const std::error_code& ec) {
+				auto promise = io_promies->get_promise(promiseid);
+
+				if (promise) {
+					reinterpret_cast<send_io_promise*>(promise)->complete(trans, ec);
+
+					sc->resume(taskid);
+				}
+			});
+
+			lua_pushinteger(L, promiseid);
+
+			return 1;
+		}
+
+		int ltask_accept(lua_State * L) {
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto io_objects = &tk->owner()->io_objects();
+
+			auto id = luaL_checkinteger(L, 1);
+
+			auto sock = io_objects->get_socket(id);
+
+			if (sock == nullptr) {
+
+				luaL_error(L, "closed sock handler(%d)", id);
+
+				return 0;
+			}
+
+			std::error_code ec;
+
+			auto io_promies = &tk->owner()->io_promises();
+
+			auto promiseid = io_promies->create_accept_io_promise();
+
+			auto taskid = tk->id();
+
+			auto sc = tk->owner();
+
+			(*sock)->accept([=](std::unique_ptr<lemon::io::io_socket> & socket, lemon::io::address && addr, const std::error_code & ec) {
+				auto promise = io_promies->get_promise(promiseid);
+
+				if (promise) {
+
+					auto id = io_objects->attach(socket.release());
+
+					reinterpret_cast<accept_io_promise*>(promise)->complete(id, addr, ec);
+
+					sc->resume(taskid);
+				}
+			},ec);
+
+			lua_pushinteger(L, promiseid);
+
+			return 1;
+		}
+
 		int ltask_connect(lua_State * L) {
 			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -282,7 +422,13 @@ namespace iolua {
 
 				{ "raw_connect",ltask_connect } ,
 
+				{ "raw_send",ltask_send } ,
+
+				{ "raw_recv",ltask_recv } ,
+
 				{ "wait",ltask_wait } ,
+
+				{ "raw_accept",ltask_accept } ,
 
                 { NULL, NULL }
         };
@@ -302,7 +448,23 @@ namespace iolua {
 					"local future = iolua.raw_connect(...)\n"
 					"coroutine.yield()\n"
 					"return iolua.wait(future)\n"
-				"end\n";;
+				"end\n"
+				"iolua.send = function(...)\n"
+					"local future = iolua.raw_send(...)\n"
+					"coroutine.yield()\n"
+					"return iolua.wait(future)\n"
+				"end\n"
+				"iolua.recv = function(...)\n"
+					"local future = iolua.raw_recv(...)\n"
+					"coroutine.yield()\n"
+					"return iolua.wait(future)\n"
+				"end\n"
+				"iolua.accept = function(...)\n"
+					"local future = iolua.raw_accept(...)\n"
+					"coroutine.yield()\n"
+					"return iolua.wait(future)\n"
+				"end\n"
+			;
 
         void ltask_open_libs(task * tk)
         {

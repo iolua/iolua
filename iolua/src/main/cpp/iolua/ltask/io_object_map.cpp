@@ -30,6 +30,17 @@ namespace iolua {
 			return id;
 		}
 
+		io_object_id io_object_map::attach(lemon::io::io_socket * sock)
+		{
+			std::unique_lock<lemon::spin_mutex>	lock(_mutex);
+
+			auto id = newid();
+
+			_sockets[id] = new io_socket(sock);
+
+			return id;
+		}
+
 
 		void io_object_map::close_socket(io_object_id id)
 		{
