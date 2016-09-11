@@ -212,7 +212,9 @@ namespace lemon{
 					if (ec) return;
 				}
 
-				lemon::io::addrinfo addinfo = getaddrinfo(addr.host(), "0", _af, _type, AI_CANONNAME)[0];
+				
+
+				lemon::io::addrinfo addinfo = getaddrinfo("", "0", _af, _type, AI_PASSIVE)[0];
 
 				bind(addinfo.addr(), ec);
 

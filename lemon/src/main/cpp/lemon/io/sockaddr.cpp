@@ -20,7 +20,7 @@ namespace lemon {
 
 			hints.ai_flags |= flags;
 
-			int status = ::getaddrinfo(host.c_str(), service.c_str(), &hints, &target);
+			int status = ::getaddrinfo(host.empty()?0:host.c_str(), service.c_str(), &hints, &target);
 
 			if (status) {
 #ifdef WIN32
