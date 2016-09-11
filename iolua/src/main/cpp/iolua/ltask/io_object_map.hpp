@@ -7,6 +7,7 @@
 #include <lemon/mutex.hpp>
 #include <lemon/nocopy.hpp>
 #include <lemon/io/io.hpp>
+#include <lua/lua.hpp>
 
 namespace iolua {
 	namespace ltask {

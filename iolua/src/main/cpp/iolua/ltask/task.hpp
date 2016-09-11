@@ -1,9 +1,9 @@
 #ifndef IOLUA_LTASK_TASK_HPP
 #define IOLUA_LTASK_TASK_HPP
 
-#include <lua/lua.hpp>
-#include <stdint.h>
 
+#include <stdint.h>
+#include <lua/lua.hpp>
 namespace iolua {
     namespace ltask {
 
@@ -49,13 +49,12 @@ namespace iolua {
                 return !_resume;
             }
 
-
         private:
-            task_id          _id;
-            lua_State        *_L;
-            task_state       _state;
-            scheduler        *_scheduler;
-            bool             _resume;
+            task_id				_id;
+            lua_State			*_L;
+            task_state			_state;
+            scheduler			*_scheduler;
+            bool				_resume;
         };
     }
 }

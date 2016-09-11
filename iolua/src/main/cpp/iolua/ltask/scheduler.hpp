@@ -15,6 +15,7 @@
 #include <iolua/ltask/channel.hpp>
 #include <lemon/io/io.hpp>
 #include <iolua/ltask/io_object_map.hpp>
+#include <iolua/ltask/io_promise.hpp>
 namespace iolua {
     namespace ltask {
 
@@ -51,6 +52,11 @@ namespace iolua {
 				return _io_object_map;
 			}
 
+			io_promise_map& io_promises()
+			{
+				return _io_promise_map;
+			}
+
         private:
 
             void do_schedule();
@@ -72,6 +78,7 @@ namespace iolua {
 			lemon::io::io_service					_io_service;
 			std::thread								_io_thread;
 			io_object_map							_io_object_map;
+			io_promise_map							_io_promise_map;
         };
     }
 }

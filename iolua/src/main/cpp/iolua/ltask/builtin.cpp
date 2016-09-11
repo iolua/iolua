@@ -209,15 +209,52 @@ namespace iolua {
 				return luaL_error(L, "getaddrinfo(%s:%s) error :%s", host, port, ec.message().c_str());
 			}
 
+			auto io_promies = &tk->owner()->io_promises();
+
+			auto taskid = tk->id();
+			auto sc = tk->owner();
+
 			for (auto address : addresses) {
 
-				(*sock)->connect(address.addr(),[](const std::error_code& ec){
-					lemonI(logger, "connect result :%s", ec.message().c_str());
+				auto promiseid = io_promies->create_connect_io_promise();
+
+				(*sock)->connect(address.addr(),[=](const std::error_code& ec){
+					auto promise = io_promies->get_promise(promiseid);
+
+					if(promise) {
+						reinterpret_cast<connect_io_promise*>(promise)->complete(ec);
+
+						sc->resume(taskid);
+					}
 				},ec);
 
 				if (ec) {
+					io_promies->close_promise(promiseid);
+
 					return luaL_error(L, "sock(%d) bind(%s:%s) error :%s", id, host, port, ec.message().c_str());
 				}
+
+				lua_pushinteger(L, promiseid);
+			}
+
+			return 1;
+		}
+
+		static int ltask_wait(lua_State * L)
+		{
+			task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
+
+			auto promiseId = luaL_checkinteger(L, 1);
+
+			auto promise = tk->owner()->io_promises().get_promise(promiseId);
+
+			if(promise)
+			{
+				auto ret = promise->raise_promise(L);
+
+				tk->owner()->io_promises().close_promise(promiseId);
+
+				return ret;
 			}
 
 			return 0;
@@ -237,8 +274,6 @@ namespace iolua {
 
                 { "select",ltask_chan_select } ,
 
-				{ "select",ltask_chan_select } ,
-
 				{ "sock",ltask_socket } ,
 
 				{ "listen",ltask_listen } ,
@@ -246,6 +281,8 @@ namespace iolua {
 				{ "bind",ltask_bind } ,
 
 				{ "connect",ltask_connect } ,
+
+				{ "wait",ltask_wait } ,
 
                 { NULL, NULL }
         };
