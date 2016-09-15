@@ -1,6 +1,9 @@
 #ifndef IOLUA_ERROR_HPP
 #define IOLUA_ERROR_HPP
 
+#include <string>
+#include <system_error>
+
 namespace iolua {
     enum class errc
     {
@@ -23,8 +26,6 @@ namespace iolua {
                 case errc::out_of_memory:
                     return "iolua out of memory";
             }
-
-            return "unknown";
         }
 
         std::error_condition default_error_condition(int _Errval) const throw()

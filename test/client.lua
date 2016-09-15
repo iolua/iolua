@@ -2,17 +2,27 @@ local host,port = ...
 
 local client = iolua.sock(2,1,6)
 
-print(iolua.connect(client, host, port))
+while true do
+    local ok  = iolua.connect(client, host, port)
+
+    if ok then break end
+end
+
+
 
 
 local i = 0
 
 while true do
 
-iolua.send(client,"hello world" .. i)
+    print("<<<======")
 
-print(iolua.recv(client,50))
+    iolua.send(client,"hello world" .. i)
 
-i = i + 1
+    print("<<<======>>>")
+
+    print(iolua.recv(client,50))
+
+    i = i + 1
 
 end

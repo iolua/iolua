@@ -247,7 +247,7 @@ namespace lemon{
 
             void bind(const address & addr,std::error_code ec) noexcept
             {
-                if (0 != ::bind((int)get(), addr, (socklen_t)addr.length()))
+                if (-1 == ::bind((int)get(), addr, (socklen_t)addr.length()))
                 {
                     ec = std::error_code(errno,std::system_category());
                 }
@@ -255,7 +255,7 @@ namespace lemon{
 
             void listen(int backlog, std::error_code ec) noexcept
             {
-                if (0 != ::listen((int)get(), backlog))
+                if (-1 == ::listen((int)get(), backlog))
                 {
                     ec = std::error_code(errno, std::system_category());
                 }

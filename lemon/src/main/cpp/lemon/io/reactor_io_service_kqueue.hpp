@@ -40,7 +40,18 @@ namespace lemon{
                 ::close(_handler);
             }
 
+            void close() override
+            {
+                if(_handler != -1) {
+                    ::close(_handler);
+
+                    _handler = -1;
+                }
+            }
+
         private:
+
+
 
             void register_io_service(handler fd, std::error_code & ec) final
             {

@@ -20,8 +20,8 @@ local pong = iolua.chan()
 iolua.task("echo.lua",ping,pong)
 
 while true do
-    iolua.send(ping,"hello world")
-    print(iolua.recv(pong))
+    iolua.chan_send(ping,"hello world")
+    print(iolua.chan_recv(pong))
 end
 
 

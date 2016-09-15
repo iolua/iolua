@@ -64,6 +64,8 @@ namespace lemon {
         pthread_rwlock_t    _handler;
     };
 }
+
+
 #else
 #include <shared_mutex>
 

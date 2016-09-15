@@ -11,8 +11,8 @@ local ping,pong = ...
 
 
 while true do
-    print(iolua.recv(ping))
-    iolua.send(pong,"echo")
+    print(iolua.chan_recv(ping))
+    iolua.chan_send(pong,"echo")
 end
 
 

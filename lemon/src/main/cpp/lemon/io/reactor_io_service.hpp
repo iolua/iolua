@@ -142,6 +142,8 @@ namespace lemon{
                 _mutex.unlock();
             }
 
+            virtual void close() = 0;
+
         protected:
 
             friend void reactor_io_service_register(
