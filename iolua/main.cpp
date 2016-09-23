@@ -3,7 +3,7 @@
 //
 #include <iostream>
 #include <lemon/log/log.hpp>
-#include <iolua/ltask/scheduler.hpp>
+#include <iolua/iolua.hpp>
 
 
 int main(int args, char** argv) {
@@ -12,9 +12,9 @@ int main(int args, char** argv) {
         return 0;
     }
 
-    lemon::log::add_sink(std::unique_ptr<lemon::log::sink>(new lemon::log::console()));
+    lemon::log::add_sink(std::unique_ptr<lemon::log::sink>(new lemon::log::console({ "console" })));
 
-    iolua::ltask::scheduler scheduler(std::thread::hardware_concurrency());
+    iolua::iolua_State state;
 
     std::vector<std::string> argList;
 
@@ -23,9 +23,9 @@ int main(int args, char** argv) {
     }
 
     try {
-        scheduler.start(argv[1],argList);
+        state.start(argv[1],argList);
 
-        scheduler.join();
+        state.join();
 
     } catch (std::exception & e) {
         std::cerr << e.what() << std::endl;
