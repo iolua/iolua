@@ -83,7 +83,7 @@ namespace iolua {
 		lua_pushboolean(L, 1);
 		lua_pushinteger(L, _id);
 		lua_pushstring(L, _addr.host().c_str());
-		lua_pushinteger(L, _addr.service());
+		lua_pushinteger(L, (lua_Integer) _addr.service());
 
 		return 4;
 	}

@@ -113,13 +113,14 @@ namespace iolua {
 		auto promise_id = context->create_io_promise<io_promise_accept>();
 
 		auto task_id = tk->id();
-
+        lemonD(logger,"task(%d) socket accept ...", task_id);
 		socket->accept([=](std::unique_ptr<lemon::io::io_socket> & socket, const lemon::io::address & addr, const std::error_code & ec){
 			auto promise = (io_promise_accept*)context->query_io_promise(promise_id);
 			if (promise)
 			{
 				promise->accept(socket, addr, ec);
 				promise->unref();
+                lemonD(logger,"wake-up task(%d)", task_id);
 				context->wakeup(task_id);
 			}
 

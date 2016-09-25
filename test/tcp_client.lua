@@ -1,6 +1,9 @@
 local config,n = ...
 
+local logger = log.open("console")
+logger:debug("create client")
 local client = socket.create(2,1,6)
+logger:debug("create client -- success")
 
 local ok = client:connect(config.host, config.port)
 

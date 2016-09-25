@@ -35,7 +35,7 @@ namespace lemon{ namespace log{
 
 		vsnprintf_s(buff, len, len, fmt, args);
 #else
-		char *buff;
+		char *buff = nullptr;
 		int len = vasprintf(&buff, fmt, args);
 #endif //WIN32
 		va_end(args);

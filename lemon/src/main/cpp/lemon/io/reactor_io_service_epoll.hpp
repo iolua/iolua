@@ -15,14 +15,14 @@
 #include <vector>
 
 #include <lemon/io/reactor_io_service.hpp>
-
+#include <lemon/log/log.hpp>
 namespace lemon{
     namespace io{
 
         class  reactor_io_service_epoll final : public reactor_io_service
         {
         public:
-            reactor_io_service_epoll()
+            reactor_io_service_epoll():_logger(lemon::log::get("reactor_io_service_epoll"))
             {
                 _epoll = epoll_create(1);
 
@@ -36,13 +36,24 @@ namespace lemon{
 
             ~reactor_io_service_epoll()
             {
-                ::close(_epoll);
+                close();
+            }
+
+            void close()
+            {
+                if(_epoll != -1) {
+                    ::close(_epoll);
+                    _epoll = -1;
+                }
+
             }
 
         private:
 
             void register_io_service(handler fd, std::error_code & ec) final
             {
+
+
                 struct epoll_event event = {EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLET};
 
                 event.data.fd = fd;
@@ -56,6 +67,8 @@ namespace lemon{
 
             void unregister_io_service(handler fd) final
             {
+
+
                 struct epoll_event event = {EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLET};
 
                 event.data.fd = fd;
@@ -68,6 +81,7 @@ namespace lemon{
 
             std::size_t io_events_wait(io_event* events,std::size_t max) final
             {
+                lemonD(_logger,"io_events_wait ...");
 
                 std::vector<epoll_event> epoll_events(max);
 
@@ -78,6 +92,8 @@ namespace lemon{
                     if(ret == -1)
                     {
                         if (errno == EINTR) continue;
+
+                        lemonE(_logger,"io_events_wait error :%s", std::error_code(errno,std::system_category()).message().c_str());
 
                         return 0;
                     }
@@ -97,14 +113,18 @@ namespace lemon{
 
                         if((epoll_events[i].events & EPOLLOUT)!=0)
                         {
-                            events[i].ops |= (int)io_event_op::read;
+                            events[i].ops |= (int)io_event_op::write;
                         }
 
                         if(events[i].ops != (int)io_event_op::none)
                         {
                             events[i].fd = epoll_events[i].data.fd;
+
+                            lemonD(_logger,"io_events_wait fd(%d)",events[i].fd);
                         }
                     }
+
+                    lemonD(_logger,"io_events_wait -- success(%d)",ret);
 
                     return (size_t)ret;
                 }
@@ -113,6 +133,7 @@ namespace lemon{
 
         private:
             int                             _epoll;
+            const log::logger               &_logger;
         };
 
         typedef  reactor_io_service_epoll io_service;

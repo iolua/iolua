@@ -37,7 +37,7 @@ namespace lemon{
 
             ~reactor_io_service_kqueue()
             {
-                ::close(_handler);
+                close();
             }
 
             void close() override

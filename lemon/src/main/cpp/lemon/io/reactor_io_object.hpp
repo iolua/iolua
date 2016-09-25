@@ -11,6 +11,7 @@
 
 #include <unistd.h>
 #include <system_error>
+#include <lemon/mutex.hpp>
 #include <lemon/nocopy.hpp>
 #include <lemon/io/handler.hpp>
 #include <lemon/io/reactor_op.hpp>
@@ -74,12 +75,16 @@ namespace lemon{
 
             reactor_op* process_one_op(io_event_op event_op)
             {
+                std::unique_lock<lemon::spin_mutex> lock(_mutex);
+
                 reactor_op* op = nullptr;
 
                 if(event_op == io_event_op::read) op = front_read_op();
                 else op = front_write_op();
 
-                if(op == nullptr ) return nullptr;
+                if(op == nullptr ) {
+                    return nullptr;
+                }
 
                 if(op->action())
                 {
@@ -104,6 +109,7 @@ namespace lemon{
 
             void push_read_op(reactor_op* op)
             {
+                std::unique_lock<lemon::spin_mutex> lock(_mutex);
                 push(&_read_header,&_read_tail,op);
             }
 
@@ -119,6 +125,7 @@ namespace lemon{
 
             void push_write_op(reactor_op* op)
             {
+                std::unique_lock<lemon::spin_mutex> lock(_mutex);
                 push(&_write_header,&_write_tail,op);
             }
 
@@ -169,6 +176,7 @@ namespace lemon{
             reactor_op              *_read_tail;
             reactor_op              *_write_header;
             reactor_op              *_write_tail;
+            lemon::spin_mutex       _mutex;
         };
 
 		typedef reactor_io_object io_object;

@@ -8,6 +8,7 @@
 #ifndef LEMON_IO_SOCKADDR_HPP
 #define LEMON_IO_SOCKADDR_HPP
 
+#include <cstring>
 #include <vector>
 #include <cerrno>
 #include <string>

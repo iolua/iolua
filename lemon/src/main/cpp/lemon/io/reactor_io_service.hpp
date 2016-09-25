@@ -21,6 +21,7 @@
 #include <lemon/io/handler.hpp>
 #include <lemon/io/reactor_op.hpp>
 #include <lemon/io/reactor_io_object.hpp>
+#include <lemon/log/log.hpp>
 
 namespace lemon{
     namespace io{
@@ -41,6 +42,7 @@ namespace lemon{
             reactor_io_service()
                     :_complete_header(nullptr)
                     ,_complete_tail(nullptr)
+                    ,_logger(log::get("reactor_io_service"))
             {
 
             }
@@ -96,7 +98,6 @@ namespace lemon{
 
                 if(complete)
                 {
-
                     // pop the header complete handler
                     _complete_header = _complete_header->next;
 
@@ -177,7 +178,7 @@ namespace lemon{
             {
                 // try invoke io operation
                 auto op = obj->process_one_op(event_op);
-
+                
                 if(op)
                 {
                     if(_complete_header == nullptr)
@@ -202,6 +203,8 @@ namespace lemon{
                 io_event events[max_events];
                 std::size_t raised;
 
+                lemonD(_logger,"reactor_io_service process ...")
+
                 while((raised = io_events_wait(events,max_events)) != 0)
                 {
                     std::unique_lock<std::mutex> lock(_mutex);
@@ -214,29 +217,50 @@ namespace lemon{
 
                         if(iter != _handlers.end())
                         {
+                            lemonD(_logger,"fd(%d) events :%d", events[i].fd,events[i].ops);
+
                             if(events[i].ops & (int)io_event_op::read)
                             {
+                                lemonD(_logger,"fd(%d) read", events[i].fd);
+
                                 if(invoke_io_op(iter->second,io_event_op::read))
                                 {
                                     completes++;
+                                }
+                                else
+                                {
+                                    lemonW(_logger,"fd(%d) read : do nothing", events[i].fd);
                                 }
                             }
 
                             if(events[i].ops & (int)io_event_op::write)
                             {
+                                lemonD(_logger,"fd(%d) write", events[i].fd);
                                 if(invoke_io_op(iter->second,io_event_op::write))
                                 {
                                     completes++;
                                 }
+                                else
+                                {
+                                    lemonW(_logger,"fd(%d) write : do nothing", events[i].fd);
+                                }
                             }
                         }
+                        else
+                        {
+                            lemonW(_logger,"reactor_io_service un-register fd(%d) event raised", events[i].fd);
+                        }
                     }
+
+                    lemonD(_logger,"reactor_io_service process completes(%d)",completes);
 
                     if(completes != 0)
                     {
                         _condition.notify_all();
                     }
                 }
+
+                lemonD(_logger,"reactor_io_service process -- exit")
             }
 
 
@@ -254,6 +278,8 @@ namespace lemon{
             reactor_op                                              *_complete_header; // the complete operation queue header
 
             reactor_op                                              *_complete_tail; // the complete operation queue tail
+
+            const lemon::log::logger                                &_logger;
         };
 
         inline void reactor_io_service_register(
@@ -261,20 +287,28 @@ namespace lemon{
                 reactor_io_object *obj,
                 std::error_code & ec ) noexcept
         {
+            lemonD(service._logger,"reactor_io_service register fd(%d)",obj->get());
 
             service.register_io_service(obj->get(),ec);
 
-            if(ec) return;
+            if(ec) {
+                lemonE(service._logger,"reactor_io_service register fd(%d) error: %s",obj->get(),ec.message().c_str());
+                return;
+            }
 
             std::lock_guard<std::mutex> lock(service._mutex);
 
             service._handlers[obj->get()] = obj;
+
+            lemonD(service._logger,"reactor_io_service register fd(%d) -- success",obj->get());
         }
 
         inline void reactor_io_service_unregister(
                 reactor_io_service& service,
                 reactor_io_object *obj ) noexcept
         {
+
+            lemonD(service._logger,"reactor_io_service un-register fd(%d)",obj->get());
 
             service.unregister_io_service(obj->get());
 
