@@ -48,6 +48,11 @@ namespace lemon{
 				}
 			}
 
+			virtual ~iocp_io_object()
+			{
+
+			}
+
 			handler get() const
 			{
 				return _fd;
@@ -133,6 +138,8 @@ namespace lemon{
 			iocp_op						*_read_header;
 			iocp_op						*_write_header;
 		};
+
+		typedef iocp_io_object io_object;
 	}
 }
 

@@ -10,7 +10,7 @@ namespace iolua {
     {
         int n = lua_gettop(L) - 1;
 
-        auto l = (lemon::log::logger*)luaL_checkudata(L,1,"iolua_logger");
+	
 
         lua_getglobal(L,"string");
 
@@ -29,13 +29,15 @@ namespace iolua {
 
         auto msg = lua_tostring(L,-1);
 
-        lua_Debug debug;
+		lua_Debug debug = { 0 };
 
-        lua_getstack(L,3, &debug);
+		lua_getstack(L, 1, &debug);
 
-        lua_getinfo(L,"lS", &debug);
+		lua_getinfo(L, "lS", &debug);
 
         auto file = lemon::fs::filepath(debug.source + 1).filename();
+
+		auto l = (lemon::log::logger*)luaL_checkudata(L, 1, "iolua_logger");
 
         l->write(level, std::string(msg),file.string().c_str(),debug.currentline);
 
@@ -84,9 +86,9 @@ namespace iolua {
 
     static int lopen_log(lua_State *L)
     {
-        auto logger = &lemon::log::get(luaL_checkstring(L,1));
+        auto l = &lemon::log::get(luaL_checkstring(L,1));
 
-        lua_pushlightuserdata(L,(void*)logger);
+        lua_pushlightuserdata(L,(void*)l);
 
         if(luaL_newmetatable(L, "iolua_logger"))
         {
@@ -107,8 +109,6 @@ namespace iolua {
             { NULL, NULL }
     };
 
-    static const char * embed_script = "";
-
     void iolua_openlog(task * tk)
     {
         luaL_newlibtable(tk->L(),funcs);
@@ -116,10 +116,5 @@ namespace iolua {
         lua_pushlightuserdata(tk->L(),tk);
         luaL_setfuncs(tk->L(),funcs,1);
         lua_setglobal(tk->L(),"log");
-
-        if (LUA_OK != luaL_dostring(tk->L(),embed_script)) {
-            lemonE(logger,"%s",lua_tostring(tk->L(),-1));
-            lua_pop(tk->L(),-1);
-        }
     }
 }

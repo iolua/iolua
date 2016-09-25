@@ -12,13 +12,14 @@
 #include <lemon/config.h>
 #include <lemon/mutex.hpp>
 #include <lemon/nocopy.hpp>
-
+#include <iolua/shared_object.hpp>
+#include <iolua/chan.hpp>
+#include <iolua/io.hpp>
 namespace iolua {
 
     class task;
-    /**
-     * define iolua's main entrypoint class
-     */
+	
+   
     class iolua_State final: private lemon::nocopy
     {
     public:
@@ -35,6 +36,57 @@ namespace iolua {
 
         void wakeup(std::uint32_t taskid);
 
+		std::uint32_t create_channel()
+		{
+			return _channels.create(this);
+		}
+
+		void close_channel(std::uint32_t id)
+		{
+			_channels.close(id);
+		}
+
+		channel* query_channel(std::uint32_t id)
+		{
+			return _channels.addref_and_fetch(id);
+		}
+
+		std::uint32_t create_io_object(lemon::io::io_object* object)
+		{
+			return _io_objects.create(object, this);
+		}
+
+		void close_io_object(std::uint32_t id)
+		{
+			_io_objects.close(id);
+		}
+
+		io_object* query_io_object(std::uint32_t id)
+		{
+			return _io_objects.addref_and_fetch(id);
+		}
+
+		lemon::io::io_service & io_service()
+		{
+			return _io_objects.io_service();
+		}
+
+		template<typename _Type>
+		std::uint32_t create_io_promise()
+		{
+			return _io_promises.attach(new _Type(this));
+		}
+
+		void close_io_promise(std::uint32_t id)
+		{
+			_io_promises.close(id);
+		}
+
+		io_promise* query_io_promise(std::uint32_t id)
+		{
+			return _io_promises.addref_and_fetch(id);
+		}
+
     private:
         void do_schedule();
     private:
@@ -47,6 +99,9 @@ namespace iolua {
         std::unordered_map<std::uint32_t, task*>        _tasks;
         std::unordered_map<std::uint32_t, task*>        _sleepingQ;
         std::queue<task*>                               _runningQ;
+		shared_object_cached<channel>					_channels;
+		io_object_cached								_io_objects;
+		shared_object_cached<io_promise>				_io_promises;
     };
 }
 

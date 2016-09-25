@@ -171,6 +171,7 @@ namespace lemon{
             reactor_op              *_write_tail;
         };
 
+		typedef reactor_io_object io_object;
     }
 }
 

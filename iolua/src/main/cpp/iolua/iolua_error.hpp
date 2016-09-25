@@ -28,6 +28,8 @@ namespace iolua {
                 case errc::create_task_error:
                     return "create task error";
             }
+
+			return "";
         }
 
         std::error_condition default_error_condition(int _Errval) const throw()

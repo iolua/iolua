@@ -4,6 +4,8 @@
 #include <iolua/iolua_error.hpp>
 #include <iolua/libtask.hpp>
 #include <iolua/liblog.hpp>
+#include <iolua/libchan.hpp>
+#include <iolua/libio.hpp>
 
 namespace iolua {
 
@@ -171,6 +173,8 @@ namespace iolua {
 
         iolua_opentask(t);
         iolua_openlog(t);
+		iolua_openchan(t);
+		iolua_openio(t);
     }
 
     void iolua_State::wakeup(std::uint32_t taskid)
@@ -181,7 +185,21 @@ namespace iolua {
 
         if (iter != _tasks.end())
         {
-            iter->second->set_state(task_state::prevent_sleeping);
+			if (iter->second->get_state() == task_state::running)
+			{
+				iter->second->set_state(task_state::prevent_sleeping);
+
+				return;
+			}
+
+			if (_sleepingQ.count(taskid))
+			{
+				_sleepingQ.erase(taskid);
+
+				_runningQ.push(iter->second);
+			}
+
+			_condition.notify_one();
         }
     }
 }
