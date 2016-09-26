@@ -34,7 +34,7 @@ namespace iolua {
 
         std::uint32_t create_task(lua_State *L);
 
-        void wakeup(std::uint32_t taskid);
+        bool wakeup(std::uint32_t taskid);
 
 		std::uint32_t create_channel()
 		{
@@ -75,6 +75,15 @@ namespace iolua {
 		std::uint32_t create_io_promise()
 		{
 			return _io_promises.attach(new _Type(this));
+		}
+
+		template<typename _Type>
+		_Type* create_io_promise(std::uint32_t & id)
+		{
+			auto val = new _Type(this);
+			id = _io_promises.attach(val,true);
+
+			return val;
 		}
 
 		void close_io_promise(std::uint32_t id)

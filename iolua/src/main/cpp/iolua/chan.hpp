@@ -22,7 +22,7 @@ namespace iolua {
 
 		void* read_message();
 
-		bool do_select(std::uint32_t taskid);
+		bool do_select(std::uint32_t task_id);
 
 	private:
 		iolua_State					*_context;

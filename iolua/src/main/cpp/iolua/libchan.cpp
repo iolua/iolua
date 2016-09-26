@@ -4,7 +4,7 @@
 #include <iolua/serializer.h>
 
 namespace iolua {
-	static auto& logger = lemon::log::get("iolua");
+	static auto& logger = lemon::log::get("console");
 
 	static int lchan_open(lua_State *L)
 	{
@@ -38,7 +38,7 @@ namespace iolua {
 			return luaL_error(L, "call recv on closed channel(%d)", id);
 		}
 
-		if (chan->do_select(id))
+		while (chan->do_select(tk->id()))
 		{
 			void * message = chan->read_message();
 

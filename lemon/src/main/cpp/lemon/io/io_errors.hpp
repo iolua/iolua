@@ -7,7 +7,7 @@
 namespace lemon { namespace io {
         enum class errc
         {
-            operation_canceled,io_service_closed
+            operation_canceled,io_service_closed,unregister_fd
         };
 
         class io_error_category : public std::error_category
@@ -23,10 +23,12 @@ namespace lemon { namespace io {
             {
                 switch ((errc)val)
                 {
-                case errc::operation_canceled:
-                    return "io operation canceled";
-                case errc::io_service_closed:
-                    return "io service closed";
+                    case errc::operation_canceled:
+                        return "io operation canceled";
+                    case errc::io_service_closed:
+                        return "io service closed";
+                    case errc::unregister_fd:
+                        return "un-register fd";
                 }
 
 				return "unknown";

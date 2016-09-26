@@ -215,22 +215,22 @@ namespace iolua {
 
 		auto context = tk->context();
 
-		auto promise_id = context->create_io_promise<io_promise_recv>();
+		std::uint32_t promise_id;
+
+		auto promise = context->create_io_promise<io_promise_recv>(promise_id);
 
 		auto task_id = tk->id();
 
-		auto promise = (io_promise_recv*)context->query_io_promise(promise_id);
+		auto maxlen = (size_t)luaL_checkinteger(L, 2);
 
-		auto maxlength = (size_t)luaL_checkinteger(L, 2);
-
-		auto buff = lemon::io::buffer { promise->buff(maxlength),maxlength };
+		auto buff = lemon::io::buffer { promise->buff(maxlen),maxlen };
 
 		promise->unref();
 
 		int flags = 0;
 
 		if (lua_type(L, 3) == LUA_TNUMBER) {
-			flags = luaL_checkinteger(L, 3);
+			flags = (int) luaL_checkinteger(L, 3);
 		}
 
 		socket->recv(buff, flags, [=](size_t trans, const std::error_code& ec) {
@@ -241,7 +241,12 @@ namespace iolua {
 				promise->unref();
 				context->wakeup(task_id);
 			}
-		});
+		},ec);
+
+		if (ec) {
+			object->unref();
+			return luaL_error(L, "sock(%d) recv error :%s", id, ec.message().c_str());
+		}
 
 		object->unref();
 
@@ -267,7 +272,10 @@ namespace iolua {
 
 		auto context = tk->context();
 
-		auto promise_id = context->create_io_promise<io_promise_send>();
+		std::uint32_t promise_id;
+
+		auto promise = context->create_io_promise<io_promise_send>(promise_id);
+
 
 		auto task_id = tk->id();
 
@@ -278,10 +286,10 @@ namespace iolua {
 		int flags = 0;
 
 		if (lua_type(L, 3) == LUA_TNUMBER) {
-			flags = luaL_checkinteger(L, 3);
+			flags = (int) luaL_checkinteger(L, 3);
 		}
 
-		socket->send( { buff, length } , flags, [=](size_t trans, const std::error_code& ec) {
+		socket->send( promise->buff({ buff, length }) , flags, [=](size_t trans, const std::error_code& ec) {
 			auto promise = (io_promise_send*)context->query_io_promise(promise_id);
 			if (promise)
 			{
@@ -289,7 +297,12 @@ namespace iolua {
 				promise->unref();
 				context->wakeup(task_id);
 			}
-		});
+		}, ec);
+
+		if (ec) {
+			object->unref();
+			return luaL_error(L, "sock(%d) send error :%s", id, ec.message().c_str());
+		}
 
 		object->unref();
 

@@ -120,9 +120,17 @@ namespace iolua {
 
 		int complete(lua_State *L);
 
+		lemon::io::const_buffer buff(lemon::io::const_buffer source)
+		{
+			_buff.assign((char*)source.data,((char*)source.data) + source.length);
+
+			return { &_buff[0],_buff.size() };
+		}
+
 	private:
 		std::error_code					_ec;
 		size_t							_trans;
+		std::vector<char>				_buff;
 	};
 
 	class io_promise_connect : public io_promise

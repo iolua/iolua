@@ -72,31 +72,58 @@ namespace lemon{
 
 
         template <typename Callback>
-        class reactor_read_complete_op : public reactor_op
+        class reactor_write_op : public reactor_op
         {
-
         public:
-            reactor_read_complete_op(Callback callback,size_t length,std::error_code ec)
+            reactor_write_op(int fd,const_buffer buff,Callback && callback)
                     :reactor_op(
-                    nullptr,
-                    (reactor_op::complete_f)reactor_read_complete_op::read_complete)
-                    ,_callback(callback)
-                    ,_trans(length)
-                    ,_ec(ec)
+                    (reactor_op::action_f)reactor_write_op::write_action,
+                    (reactor_op::complete_f)reactor_write_op::write_complete)
+                    ,_fd(fd)
+                    ,_buff(buff)
+                    ,_callback((callback))
+                    ,_trans(0)
             {
 
             }
 
         private:
-            static void read_complete (reactor_read_complete_op* op)
+
+            static bool write_action (reactor_write_op* op)
+            {
+                ssize_t length = ::write(op->_fd,op->_buff.data,op->_buff.length);
+
+                if(length == -1)
+                {
+                    if(errno == EAGAIN || errno == EWOULDBLOCK)
+                    {
+                        return false;
+                    }
+
+                    op->_ec = std::error_code(errno,std::system_category());
+
+                    return true;
+                }
+
+                op->_trans = (size_t)length;
+
+                return true;
+            }
+
+            static void write_complete (reactor_write_op* op)
             {
                 op->_callback(op->_trans,op->_ec);
             }
 
-            Callback                        _callback;
-            size_t                          _trans;
-            std::error_code                 _ec;
+        private:
+            int                     _fd;
+            const_buffer            _buff;
+            Callback                _callback;
+            size_t                  _trans;
+            std::error_code         _ec;
         };
+
+
 
 
         class reactor_io_stream : public reactor_io_object
@@ -109,43 +136,33 @@ namespace lemon{
             }
 
             template <typename Callback>
-            void read(buffer buff,Callback && callback)
+            void read(buffer buff,Callback && callback, std::error_code & ec)
             {
-                ssize_t length = ::read(get(),buff.data,buff.length);
+                auto op = std::unique_ptr<reactor_accept_op<Callback>>(new reactor_read_op<Callback>((int)get(),buff,std::forward<Callback>(callback)));
 
-                if(length == -1)
+                service().push_read_op(this,op.get(),ec);
+
+                if(ec)
                 {
-                    if(errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
-                        auto op = new reactor_read_op<Callback>(get(),buff,std::forward<Callback>(callback));
-
-                        std::lock_guard<reactor_io_service> lock(service());
-
-                        push_read_op(op);
-                    }
-                    else
-                    {
-                        auto op = new reactor_read_complete_op<Callback>(
-                                std::forward<Callback>(callback),
-                                0,
-                                std::error_code(errno,std::system_category()));
-
-                        service().complete(op);
-                    }
+                    return;
                 }
-                else
-                {
 
-                    auto op = new reactor_read_complete_op<Callback>(std::forward<Callback>(callback),(size_t)length,std::error_code());
-
-                    service().complete(op);
-                }
+                op.release();
             }
 
             template <typename Callback>
-            void write(const_buffer buff,Callback && callback)
+            void write(const_buffer buff,Callback && callback, std::error_code & ec)
             {
+                auto op = std::unique_ptr<reactor_accept_op<Callback>>(new reactor_write_op<Callback>((int)get(),buff,std::forward<Callback>(callback)));
 
+                service().push_read_op(this,op.get(),ec);
+
+                if(ec)
+                {
+                    return;
+                }
+
+                op.release();
             }
         };
 

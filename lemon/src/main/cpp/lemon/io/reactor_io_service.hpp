@@ -37,6 +37,16 @@ namespace lemon{
 
         class reactor_io_service : private nocopy
         {
+            friend void reactor_io_service_register(
+                    reactor_io_service& service,
+                    reactor_io_object *obj,
+                    std::error_code & ec
+            ) noexcept;
+
+            friend void reactor_io_service_unregister(
+                    reactor_io_service& service,
+                    reactor_io_object *obj
+            ) noexcept;
         public:
 
             reactor_io_service()
@@ -51,6 +61,8 @@ namespace lemon{
             {
                 if(_dispatcher.joinable()) _dispatcher.join();
             }
+
+            virtual void close() = 0;
 
             void run_one(std::error_code & ec)
             {
@@ -113,50 +125,49 @@ namespace lemon{
                 }
             }
 
-            void notify_all()
-            {
-                _condition.notify_all();
-            }
 
-            void complete(reactor_op * op)
+            void push_read_op(reactor_io_object* obj, reactor_op* op, std::error_code & ec)
             {
                 std::unique_lock<std::mutex> lock(_mutex);
 
-                if(_complete_header == nullptr)
+                if( _handlers.count(obj->get()) == 0 )
                 {
-                    _complete_tail = _complete_header = op;
+                    ec = make_error_code(errc::unregister_fd);
+                    return;
                 }
-                else
+
+                obj->push_read_op(op);
+
+                if(invoke_io_op(obj,io_event_op::read))
                 {
-                    _complete_tail->next = op;
-                    _complete_tail = op;
+                    _condition.notify_one();
                 }
             }
 
-            void lock()
+            void push_write_op(reactor_io_object* obj, reactor_op* op, std::error_code & ec)
             {
-                _mutex.lock();
-            }
+                std::unique_lock<std::mutex> lock(_mutex);
 
-            void unlock()
-            {
-                _mutex.unlock();
-            }
+                if( _handlers.count(obj->get()) == 0 )
+                {
+                    ec = make_error_code(errc::unregister_fd);
+                    return;
+                }
 
-            virtual void close() = 0;
+                obj->push_write_op(op);
+
+                if(invoke_io_op(obj,io_event_op::write))
+                {
+                    _condition.notify_one();
+                }
+            }
 
         protected:
 
-            friend void reactor_io_service_register(
-                    reactor_io_service& service,
-                    reactor_io_object *obj,
-                    std::error_code & ec
-            ) noexcept;
-
-            friend void reactor_io_service_unregister(
-                    reactor_io_service& service,
-                    reactor_io_object *obj
-            ) noexcept;
+            void start()
+            {
+                _dispatcher = std::thread(std::bind(&reactor_io_service::process,this));
+            }
 
 
             virtual std::size_t io_events_wait(io_event* events,std::size_t max) = 0;
@@ -164,12 +175,6 @@ namespace lemon{
             virtual void register_io_service(handler fd, std::error_code & ec) = 0;
 
             virtual void unregister_io_service(handler fd) = 0;
-
-
-            void start()
-            {
-                _dispatcher = std::thread(std::bind(&reactor_io_service::process,this));
-            }
 
         private:
 
@@ -254,9 +259,9 @@ namespace lemon{
 
                     lemonD(_logger,"reactor_io_service process completes(%d)",completes);
 
-                    if(completes != 0)
+                    for(size_t i = 0; i < completes; i ++ )
                     {
-                        _condition.notify_all();
+                        _condition.notify_one();
                     }
                 }
 

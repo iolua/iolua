@@ -156,6 +156,8 @@ namespace iolua {
             if(id != 0 && _tasks.count(id) == 0 ) break;
         }
 
+        lemonD(logger,"create task(%d)",id)
+
         auto t = new task(this,L,id);
 
         _tasks[id] = t;
@@ -177,7 +179,7 @@ namespace iolua {
 		iolua_openio(t);
     }
 
-    void iolua_State::wakeup(std::uint32_t taskid)
+    bool iolua_State::wakeup(std::uint32_t taskid)
     {
         std::unique_lock<lemon::spin_mutex> lock(_mutex);
 
@@ -185,11 +187,15 @@ namespace iolua {
 
         if (iter != _tasks.end())
         {
+            lemonD(logger,"wake-up task(%p:%d) status :%d", iter->second,iter->second->get_state());
+
 			if (iter->second->get_state() == task_state::running)
 			{
 				iter->second->set_state(task_state::prevent_sleeping);
 
-				return;
+                lemonW(logger,"wake-up task(%d) -- success, prevent_sleeping", taskid);
+
+				return true;
 			}
 
 			if (_sleepingQ.count(taskid))
@@ -200,6 +206,13 @@ namespace iolua {
 			}
 
 			_condition.notify_one();
+
+            return true;
         }
+
+        lemonW(logger,"wake-up task(%d) -- failed, not found", taskid);
+
+        return false;
+
     }
 }

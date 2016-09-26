@@ -1,7 +1,11 @@
 #include <iolua/chan.hpp>
 #include <iolua/iolua.hpp>
+#include <lemon/log/log.hpp>
 
 namespace iolua {
+
+	static auto& logger = lemon::log::get("iolua");
+
 	channel::channel(iolua_State * context)
 		:_context(context)
 	{
@@ -17,19 +21,32 @@ namespace iolua {
 	{
 		std::uint32_t id;
 
+		for (;;)
 		{
-			std::unique_lock<lemon::spin_mutex> lock(_mutex);
+			{
+				std::unique_lock<lemon::spin_mutex> lock(_mutex);
 
-			_messageQ.push(message);
+				_messageQ.push(message);
 
-			if (_selectQ.empty())  return;
+				if (_selectQ.empty())  return;
 
-			id = _selectQ.front();
+				id = _selectQ.front();
 
-			_selectQ.pop();
+				_selectQ.pop();
+			}
+
+			lemonD(logger,"channel(%d) wake-up task(%d)",this->id(),id);
+
+			if(_context->wakeup(id))
+			{
+				lemonD(logger,"channel(%d) wake-up task(%d) -- success",this->id(),id);
+				return;
+			}
+
+			lemonD(logger,"channel(%d) wake-up task(%d) -- failed",this->id(),id);
 		}
 
-		_context->wakeup(id);
+
 	}
 
 	void* channel::read_message()
@@ -45,16 +62,19 @@ namespace iolua {
 		return data;
 	}
 
-	bool channel::do_select(std::uint32_t taskid)
+	bool channel::do_select(std::uint32_t task_id)
 	{
 		std::unique_lock<lemon::spin_mutex> lock(_mutex);
 
 		if (!_messageQ.empty())
 		{
+			lemonD(logger,"task(%d) select channel(%d) -- noblock",task_id,id());
 			return true;
 		}
 
-		_selectQ.push(taskid);
+		lemonD(logger,"task(%d) select channel(%d) -- blocking",task_id,id());
+
+		_selectQ.push(task_id);
 
 		return false;
 	}

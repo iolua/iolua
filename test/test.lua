@@ -20,8 +20,8 @@ end
 run_unittest("echo_test.lua",counter)
 
 run_unittest("tcp_test.lua",counter)
-
--- run_unittest("chan_test.lua",counter)
+--
+run_unittest("chan_test.lua",counter)
 
 
 

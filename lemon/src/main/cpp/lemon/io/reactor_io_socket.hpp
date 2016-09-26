@@ -13,8 +13,10 @@
 #include <system_error>
 
 #include <lemon/config.h>
+#include <lemon/io/buff.hpp>
 #include <lemon/io/sockaddr.hpp>
-#include <lemon/io/reactor_io_stream.hpp>
+#include <lemon/io/reactor_io_service.hpp>
+//#include <lemon/io/reactor_io_stream.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -245,7 +247,7 @@ namespace lemon{
 
             }
 
-            void bind(const address & addr,std::error_code ec) noexcept
+            void bind(const address & addr,std::error_code& ec) noexcept
             {
                 if (-1 == ::bind((int)get(), addr, (socklen_t)addr.length()))
                 {
@@ -253,7 +255,7 @@ namespace lemon{
                 }
             }
 
-            void listen(int backlog, std::error_code ec) noexcept
+            void listen(int backlog, std::error_code& ec) noexcept
             {
                 if (-1 == ::listen((int)get(), backlog))
                 {
@@ -265,14 +267,14 @@ namespace lemon{
             {
                 auto op = std::unique_ptr<reactor_accept_op<Callback>>(new reactor_accept_op<Callback>(service(),(int)get(),std::forward<Callback>(callback)));
 
-                if(op->action())
+                service().push_read_op(this,op.get(),ec);
+
+                if(ec)
                 {
-                    service().complete(op.release());
+                    return;
                 }
-                else
-                {
-                    push_read_op(op.release());
-                }
+
+                op.release();
             }
 
             template <typename Callback>
@@ -280,44 +282,44 @@ namespace lemon{
             {
                 auto op = std::unique_ptr<reactor_connect_op<Callback>>(new reactor_connect_op<Callback>((int)get(),addr,std::forward<Callback>(callback)));
 
-                if(op->action())
+                service().push_write_op(this,op.get(),ec);
+
+                if(ec)
                 {
-                    service().complete(op.release());
+                    return;
                 }
-                else
-                {
-                    push_write_op(op.release());
-                }
+
+                op.release();
             }
 
             template <typename Callback>
-            void recv(buffer buff, int flags, Callback && callback)
+            void recv(buffer buff, int flags, Callback && callback, std::error_code & ec)
             {
                 auto op = std::unique_ptr<reactor_recv_op<Callback>>(new reactor_recv_op<Callback>((int)get(),buff,flags,std::forward<Callback>(callback)));
 
-                if(op->action())
+                service().push_read_op(this,op.get(),ec);
+
+                if(ec)
                 {
-                    service().complete(op.release());
+                    return;
                 }
-                else
-                {
-                    push_read_op(op.release());
-                }
+
+                op.release();
             }
 
             template <typename Callback>
-            void send(const_buffer buff, int flags, Callback && callback)
+            void send(const_buffer buff, int flags, Callback && callback, std::error_code & ec)
             {
                 auto op = std::unique_ptr<reactor_send_op<Callback>>(new reactor_send_op<Callback>((int)get(),buff,flags,std::forward<Callback>(callback)));
 
-                if(op->action())
+                service().push_write_op(this,op.get(),ec);
+
+                if(ec)
                 {
-                    service().complete(op.release());
+                    return;
                 }
-                else
-                {
-                    push_write_op(op.release());
-                }
+
+                op.release();
             }
 
 			int af() const {

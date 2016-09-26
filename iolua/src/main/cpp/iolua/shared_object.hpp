@@ -58,7 +58,7 @@ namespace iolua {
 		static_assert(std::is_base_of<shared_object, _Type>::value, "_T must be a sub class of shared_object ");
 	public:
 
-		std::uint32_t attach(_Type * obj)
+		std::uint32_t attach(_Type * obj,bool addref = false)
 		{
 			std::uint32_t id;
 
@@ -74,6 +74,11 @@ namespace iolua {
 			obj->set_id(id);
 
 			_cached[id] = obj;
+
+            if (addref)
+            {
+                obj->addref();
+            }
 
 			return id;
 		}

@@ -13,3 +13,5 @@ if ok then
         client:recv(1024)
     end
 end
+
+client:close()

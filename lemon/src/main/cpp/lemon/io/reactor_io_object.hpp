@@ -44,6 +44,7 @@ namespace lemon{
         class reactor_io_object : private nocopy
         {
         public:
+            friend class reactor_io_service;
             reactor_io_object(reactor_io_service & service,handler fd)
                     :_handler(fd)
                     ,_service(service)
@@ -65,7 +66,7 @@ namespace lemon{
             {
                 reactor_io_service_unregister(_service,this);
 
-                ::close(_handler);
+                ::close((int) _handler);
             }
 
             handler get() const
@@ -73,10 +74,17 @@ namespace lemon{
                 return _handler;
             }
 
+        protected:
+
+            reactor_io_service & service()
+            {
+                return _service;
+            }
+
+        private:
+
             reactor_op* process_one_op(io_event_op event_op)
             {
-                std::unique_lock<lemon::spin_mutex> lock(_mutex);
-
                 reactor_op* op = nullptr;
 
                 if(event_op == io_event_op::read) op = front_read_op();
@@ -100,16 +108,8 @@ namespace lemon{
             }
 
 
-            reactor_io_service & service()
-            {
-                return _service;
-            }
-
-        protected:
-
             void push_read_op(reactor_op* op)
             {
-                std::unique_lock<lemon::spin_mutex> lock(_mutex);
                 push(&_read_header,&_read_tail,op);
             }
 
@@ -125,7 +125,6 @@ namespace lemon{
 
             void push_write_op(reactor_op* op)
             {
-                std::unique_lock<lemon::spin_mutex> lock(_mutex);
                 push(&_write_header,&_write_tail,op);
             }
 
@@ -139,8 +138,6 @@ namespace lemon{
                 pop(&_write_header,&_write_tail);
             }
 
-
-        private:
 
             static void push(reactor_op **header,reactor_op**tail, reactor_op *irp) noexcept
             {
@@ -176,7 +173,6 @@ namespace lemon{
             reactor_op              *_read_tail;
             reactor_op              *_write_header;
             reactor_op              *_write_tail;
-            lemon::spin_mutex       _mutex;
         };
 
 		typedef reactor_io_object io_object;
