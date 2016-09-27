@@ -1,6 +1,5 @@
 #include <iolua/chan.hpp>
 #include <iolua/iolua.hpp>
-#include <lemon/log/log.hpp>
 
 namespace iolua {
 
@@ -35,15 +34,10 @@ namespace iolua {
 				_selectQ.pop();
 			}
 
-			lemonD(logger,"channel(%d) wake-up task(%d)",this->id(),id);
-
 			if(_context->wakeup(id))
 			{
-				lemonD(logger,"channel(%d) wake-up task(%d) -- success",this->id(),id);
 				return;
 			}
-
-			lemonD(logger,"channel(%d) wake-up task(%d) -- failed",this->id(),id);
 		}
 
 
@@ -68,11 +62,8 @@ namespace iolua {
 
 		if (!_messageQ.empty())
 		{
-			lemonD(logger,"task(%d) select channel(%d) -- noblock",task_id,id());
 			return true;
 		}
-
-		lemonD(logger,"task(%d) select channel(%d) -- blocking",task_id,id());
 
 		_selectQ.push(task_id);
 

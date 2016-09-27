@@ -2,56 +2,65 @@
 #include <lemon/log/sink.hpp>
 #include <lemon/log/factory.hpp>
 
-namespace lemon{ namespace log{
+namespace lemon{
+	namespace log{
 
-    namespace {
-        std::once_flag flag;
+		namespace {
+			std::once_flag flag;
 
-        factory *_factory;
-    }
+			factory *_factory;
+		}
 
-	void init()
-	{
-		_factory = new factory();
-	}
+		void init()
+		{
+			_factory = new factory();
+		}
 
-	void add_sink(std::unique_ptr<sink> s)
-	{
-		std::call_once(flag, init);
+		void add_sink(std::unique_ptr<sink> s)
+		{
+			std::call_once(flag, init);
 
-		_factory->add_sink(std::move(s));
-	}
+			_factory->add_sink(std::move(s));
+		}
 
-	void add_sink(const std::string & name, std::unique_ptr<sink> s)
-	{
-		std::call_once(flag, init);
+		void add_sink(const std::string & name, std::unique_ptr<sink> s)
+		{
+			std::call_once(flag, init);
 
-		_factory->add_sink(name,std::move(s));
-	}
-	void remove_all_sinks()
-	{
-		std::call_once(flag, init);
+			_factory->add_sink(name,std::move(s));
+		}
+		void remove_all_sinks()
+		{
+			std::call_once(flag, init);
 
-		_factory->remove_all_sinks();
-	}
-	std::shared_ptr<sink> get_sink(const std::string & name)
-	{
-		std::call_once(flag, init);
+			_factory->remove_all_sinks();
+		}
+		std::shared_ptr<sink> get_sink(const std::string & name)
+		{
+			std::call_once(flag, init);
 
-		return _factory->get_sink(name);
-	}
+			return _factory->get_sink(name);
+		}
 
-    const logger& get(const std::string &name)
-    {
-        std::call_once(flag,init);
+		const logger& get(const std::string &name)
+		{
+			std::call_once(flag,init);
 
-        return _factory->get(name);
-    }
+			return _factory->get(name);
+		}
 
-    void close()
-    {
-        std::call_once(flag,init);
+		void close()
+		{
+			std::call_once(flag,init);
 
-		_factory->close();
-    }
-}}
+			_factory->close();
+		}
+
+		void set_levels(int levels,const std::vector<std::string> &loggers)
+		{
+			std::call_once(flag,init);
+
+			_factory->setlevels(levels,loggers);
+		}
+}
+}

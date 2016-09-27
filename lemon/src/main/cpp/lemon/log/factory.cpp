@@ -60,6 +60,12 @@ namespace lemon{ namespace log{
 		{
 			_levels = levels;
 
+			for(auto logger: _loggers)
+			{
+				logger.second->levels(levels);
+
+			}
+
 			return;
 		}
 

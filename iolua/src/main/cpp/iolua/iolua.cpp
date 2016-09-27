@@ -9,7 +9,7 @@
 
 namespace iolua {
 
-    static auto& logger = lemon::log::get("iolua");
+    static auto& logger = lemon::log::get("iolua_dispatcher");
 
     iolua_State::iolua_State()
     {
@@ -80,7 +80,6 @@ namespace iolua {
                     break;
 
                 case task_state::closed :
-                    lemonD(logger,"close task(%d)",task->id());
                     _tasks.erase(task->id());
                     delete task;
 
@@ -187,13 +186,10 @@ namespace iolua {
 
         if (iter != _tasks.end())
         {
-            lemonD(logger,"wake-up task(%p:%d) status :%d", iter->second,iter->second->get_state());
 
 			if (iter->second->get_state() == task_state::running)
 			{
 				iter->second->set_state(task_state::prevent_sleeping);
-
-                lemonW(logger,"wake-up task(%d) -- success, prevent_sleeping", taskid);
 
 				return true;
 			}
@@ -209,8 +205,6 @@ namespace iolua {
 
             return true;
         }
-
-        lemonW(logger,"wake-up task(%d) -- failed, not found", taskid);
 
         return false;
 

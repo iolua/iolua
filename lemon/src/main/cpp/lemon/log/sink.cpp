@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include <lemon/config.h>
 #include <lemon/fs/fs.hpp>
 #include <lemon/log/sink.hpp>
 #include <lemon/log/logger.hpp>
@@ -14,6 +13,7 @@ namespace lemon{ namespace log{
 
 		void console::write(const message &msg)
 		{
+
 #ifdef WIN32
 			switch (msg.LEVEL)
 		{
@@ -61,9 +61,42 @@ namespace lemon{ namespace log{
 			}
 #endif
 
-			printf("%s",msg.Content.c_str());
-			printf("\n");
+			if(check_display_flag(display_flag::timestamp))
+			{
+				std::time_t ts = std::chrono::system_clock::to_time_t(msg.TS);
+#ifdef WIN32
+				tm t;
+				localtime_s(&t, &ts);
+				tm *tm = &t;
+#else
+				auto tm = localtime(&ts);
+#endif
 
+				auto milliseconds =
+
+						std::chrono::duration_cast<std::chrono::milliseconds>(msg.TS.time_since_epoch()).count() -
+
+						std::chrono::duration_cast<std::chrono::seconds>(msg.TS.time_since_epoch()).count() * 1000
+				;
+
+				std::cout << tm->tm_year + 1900 << "-" << tm->tm_mon << "-" << tm->tm_mday << " "
+
+						  << tm->tm_hour << ":" << tm->tm_min << ":" << tm->tm_sec << "."
+
+						  << std::setw(4) << std::setfill('0') <<milliseconds << " ";
+			}
+
+			if (check_display_flag(display_flag::source))
+			{
+				std::cout << msg.Source << " ";
+			}
+
+			if (check_display_flag(display_flag::file_lines))
+			{
+				std::cout << "(" << fs::filepath(msg.File).filename() << ":" << msg.Lines << ") ";
+			}
+
+			std::cout << msg.Content << std::endl;
 
 #ifdef WIN32
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);

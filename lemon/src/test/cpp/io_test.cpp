@@ -36,6 +36,8 @@ test_(socket)
 
 			stream = new io_stream_socket(socket);
 
+			std::error_code ec;
+
 			stream->recv(buff(recvbuff), 0, [&](size_t trans, const std::error_code &ec) {
 				if (ec)
 				{
@@ -47,7 +49,7 @@ test_(socket)
 				}
 
 				exit = true;
-			});
+			}, ec);
 		}
 
 	});
@@ -64,6 +66,8 @@ test_(socket)
 		{
 			lemonI(logger, "connect success");
 
+			std::error_code ec;
+
 			client.send(cbuff("hello world"), 0, [](size_t trans, const std::error_code &ec) {
 				if (ec)
 				{
@@ -73,7 +77,7 @@ test_(socket)
 				{
 					lemonI(logger, "send message to service success(%d)",trans);
 				}
-			});
+			}, ec);
 		}
 	});
 

@@ -105,15 +105,15 @@ namespace lemon {
             }
 
             template <typename Callback>
-            void recv(buffer buff, int flags, Callback && callback)
+            void recv(buffer buff, int flags, Callback && callback, std::error_code & ec)
             {
-                _socket->recv(buff, flags, std::forward<Callback>(callback));
+                _socket->recv(buff, flags, std::forward<Callback>(callback), ec);
             }
 
             template <typename Callback>
-            void send(const_buffer buff, int flags, Callback && callback)
+            void send(const_buffer buff, int flags, Callback && callback, std::error_code & ec)
             {
-                _socket->send(buff, flags, std::forward<Callback>(callback));
+                _socket->send(buff, flags, std::forward<Callback>(callback), ec);
             }
 
 

@@ -6,7 +6,8 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local logger = log.open("console")
+log.level("d")
+log.console("tsfl","console","iolua")
 
 local c = chan.create()
 

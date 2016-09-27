@@ -10,45 +10,50 @@
 #include <lemon/log/logger.hpp>
 #include <lemon/log/file_sink.hpp>
 
-namespace lemon{ namespace log{
-	
-	void add_sink(std::unique_ptr<sink> s);
-	void add_sink(const std::string & name,std::unique_ptr<sink> s);
-	void remove_all_sinks();
-	std::shared_ptr<sink> get_sink(const std::string & name);
+namespace lemon{
+	namespace log{
 
-	const logger& get(const std::string & name);
+		void add_sink(std::unique_ptr<sink> s);
+		void add_sink(const std::string & name,std::unique_ptr<sink> s);
+		void remove_all_sinks();
 
-	void close();
+		std::shared_ptr<sink> get_sink(const std::string & name);
 
-	inline void write(const logger & source, level l,const char *file, int lines, const char *fmt,...)
-	{
-		va_list args;
+		const logger& get(const std::string & name);
 
-		va_start(args,fmt);
+		void set_levels(int levels,const std::vector<std::string> &loggers);
+
+		void close();
+
+		inline void write(const logger & source, level l,const char *file, int lines, const char *fmt,...)
+		{
+			va_list args;
+
+			va_start(args,fmt);
 
 #ifdef WIN32
-		
-		int len = vsnprintf(NULL,0, fmt, args) + 1;
+
+			int len = vsnprintf(NULL,0, fmt, args) + 1;
 
 		char *buff = new char[len];
 
 		vsnprintf_s(buff, len, len, fmt, args);
 #else
-		char *buff = nullptr;
-		int len = vasprintf(&buff, fmt, args);
+			char *buff = nullptr;
+			int len = vasprintf(&buff, fmt, args);
 #endif //WIN32
-		va_end(args);
+			va_end(args);
 
-		source.write(l, std::string(buff, buff + len), file, lines);
+			source.write(l, std::string(buff, buff + len), file, lines);
 
 #ifdef WIN32
-		delete buff;
+			delete buff;
 #else
-		free(buff);
+			free(buff);
 #endif //WIN32
+		}
 	}
-}}
+}
 
 #define lemonE(l,fmt,...) if(((l).levels() & (int)lemon::log::level::error) != 0) { \
 	lemon::log::write((l),lemon::log::level::error,__FILE__,__LINE__,(fmt),##__VA_ARGS__);\

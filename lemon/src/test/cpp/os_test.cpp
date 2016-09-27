@@ -33,6 +33,8 @@ void out_print(exec & c)
 
 	static char recv_buff[1024];
 
+	std::error_code ec;
+
 	c.out().read(lemon::io::buff(recv_buff),[&](size_t trans, const std::error_code &err){
 
 		if(!err)
@@ -45,13 +47,15 @@ void out_print(exec & c)
 		}
 
 		lemonE(lemon::log::get("test"), "%s", err.message().c_str());
-	});
+	}, ec);
 }
 
 void err_print(exec & c)
 {
 
 	static char recv_buff[1024];
+
+	std::error_code ec;
 
 	c.err().read(lemon::io::buff(recv_buff), [&](size_t trans, const std::error_code &err) {
 
@@ -65,7 +69,7 @@ void err_print(exec & c)
 		}
 
 		lemonE(lemon::log::get("test"), "%s", err.message().c_str());
-	});
+	}, ec);
 }
 
 
