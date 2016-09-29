@@ -49,6 +49,11 @@ namespace lemon{
 
                     op->_ec = std::error_code(errno,std::system_category());
 
+                    if(op->_ec)
+                    {
+                        length ++;
+                    }
+
                     return true;
                 }
 

@@ -52,7 +52,7 @@ namespace lemon{
             reactor_io_service()
                     :_complete_header(nullptr)
                     ,_complete_tail(nullptr)
-                    ,_logger(log::get("reactor_io_service"))
+                    ,_logger(log::get("io_service"))
             {
 
             }

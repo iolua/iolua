@@ -145,4 +145,25 @@ namespace iolua {
 			return 1;
 		}
 	}
+
+	void io_promise_exec_wait::wait(int exit_code, const std::error_code & ec)
+	{
+		_exit_code = exit_code;
+
+		_ec = ec;
+	}
+
+	int io_promise_exec_wait::complete(lua_State *L)
+	{
+		if (_ec) {
+			lua_pushboolean(L, false);
+			lua_pushstring(L, _ec.message().c_str());
+			return 2;
+		}
+		else {
+			lua_pushboolean(L, true);
+			lua_pushinteger(L, _exit_code);
+			return 2;
+		}
+	}
 }

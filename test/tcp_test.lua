@@ -7,21 +7,21 @@ local config = {
     host = "localhost",port = 1812
 }
 
-server:bind(config.host, config.port)
+socket.bind(server,config.host, config.port)
 
-server:listen()
+socket.listen(server)
 
 task.create("tcp_client.lua",config,n)
 
-local ok, client,host,port = server:accept()
+local ok, client = socket.accept(server)
 
 if ok then
-    for v = 1,n,1 do
-        local ok, buff = client:recv(1024)
-        client:send(buff)
+    for _ = 1,n,1 do
+        local ok, buff = socket.recv(client,1024)
+        socket.send(client,buff)
     end
 
-    client:close()
+    socket.close(client)
 end
 
-server:close()
+socket.close(server)

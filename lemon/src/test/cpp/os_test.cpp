@@ -74,7 +74,10 @@ void err_print(exec & c)
 
 
 test_(command) {
-	exec c("netstat", exec_options((int)exec_options::pipe_in | (int)exec_options::pipe_out)) ;
+
+	lemon::io::io_service service;
+
+	exec c(service,"netstat", (int)exec_options::pipe_in | (int)exec_options::pipe_out) ;
 
 	out_print(c);
 

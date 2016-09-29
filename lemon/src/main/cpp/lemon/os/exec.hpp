@@ -61,14 +61,13 @@ namespace lemon {
 		class exec
 		{
 		public:
-			exec(const std::string & name)
-				:exec(name, exec_options::none)
+			exec(lemon::io::io_service& service, const std::string & name)
+				:exec(service, name, (int) exec_options::none)
 			{
 
 			}
 
-			exec(const std::string & name, exec_options options)
-				:_joined(true), _options(options)
+			exec(lemon::io::io_service& service, const std::string & name, int options)
 			{
 				auto found = lookup(name);
 
@@ -77,19 +76,19 @@ namespace lemon {
 					throw std::system_error((int)errc::command_not_found, os_error_category());
 				}
 
-				if (((int)options & (int)exec_options::pipe_in))
+				if ((options & (int)exec_options::pipe_in))
 				{
-					_in.reset(new io::pipe(_ioservice));
+					_in.reset(new lemon::io::pipe(service));
 				}
 
-				if (((int)options & (int)exec_options::pipe_out))
+				if ((options & (int)exec_options::pipe_out))
 				{
-					_out.reset(new io::pipe(_ioservice));
+					_out.reset(new lemon::io::pipe(service));
 				}
 
-				if (((int)options & (int)exec_options::pipe_error))
+				if ((options & (int)exec_options::pipe_error))
 				{
-					_err.reset(new io::pipe(_ioservice));
+					_err.reset(new lemon::io::pipe(service));
 				}
 
 				_impl.reset(new process(
@@ -101,9 +100,9 @@ namespace lemon {
 
 			~exec()
 			{
-				if(_waiter.joinable())
+				if(_wait_thread.joinable())
 				{
-					_waiter.join();
+					_wait_thread.join();
 				}
 			}
 
@@ -129,11 +128,6 @@ namespace lemon {
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
 
-				if(!_joined)
-				{
-					throw std::system_error(errc::exec_already_started);
-				}
-
 				std::error_code err;
 				process_start(*_impl, err, args);
 
@@ -142,44 +136,30 @@ namespace lemon {
 					throw std::system_error(err);
 				}
 
-				_joined = false;
+				_wait_thread = std::thread([&]{
 
-				_waiter = std::thread(std::bind(&exec::wait_proc, this));
-			}
+					std::error_code ec;
+					int result = process_wait(*_impl,ec);
 
-			int wait()
-			{
-				std::unique_lock<std::mutex> lock(_mutex);
+					std::unique_lock<std::mutex> lock1(_mutex);
 
-				for (;;)
-				{
-					if (_joined)
+					_ec = ec;
+
+					_exit_code = result;
+
+					if(_wait)
 					{
-						if (_options != exec_options::none)
-						{
-							io_service_run(lock);
-						}
-
-						if (_errcode)
-						{
-							throw std::system_error(_errcode);
-						}
-
-						_waiter.join();
-
-						return _exit_code;
+						_wait(_exit_code,_ec);
 					}
 
-				
-					if(_options != exec_options::none)
-					{
-						io_service_run(lock);
-					}
-					else
-					{
-						_condition.wait(lock);
-					}
-				}
+					_impl.reset();
+				});
+
+				if(_in) _in->close_in();
+
+				if(_out) _out->close_out();
+
+				if(_err) _err->close_out();
 			}
 
 			template <typename ...Args>
@@ -187,7 +167,7 @@ namespace lemon {
 			{
 				start(std::forward<Args>(args)...);
 
-				return wait();
+				return 0;
 			}
 
 			io::io_stream& in() const
@@ -205,65 +185,59 @@ namespace lemon {
 				return _err->in();
 			}
 
-		private:
-
-			template<typename Mutex>
-			void io_service_run(std::unique_lock<Mutex> & lock)
+			io::io_stream* release_in() const
 			{
-				using namespace std::chrono;
+				return _in->release_out();
+			}
 
-				for (;;)
+			io::io_stream* release_out() const
+			{
+				return _out->release_in();
+			}
+
+			io::io_stream* release_err() const
+			{
+				return _err->release_in();
+			}
+
+			template <typename Callback>
+			void wait(Callback && callback)
+			{
+				std::unique_lock<std::mutex> lock(_mutex);
+
+				if(!_wait_thread.joinable())
 				{
-					std::error_code err;
-
-					_ioservice.run_one(milliseconds(10), err);
-
-					if (!err) continue;
-
-					if (err == io::errc::io_service_closed)
-					{
-						_condition.wait(lock);
-
-						break;
-					}
-
-					if (std::errc::timed_out == err)
-					{
-						_condition.wait_for(lock, milliseconds(10));
-
-						break;
-					}
-
-					if (err)
-					{
-						throw std::system_error(err);
-					}
+					callback(_exit_code,_ec);
+				}
+				else
+				{
+					_wait = callback;
 				}
 			}
 
-			void wait_proc()
+			int wait()
 			{
-				_exit_code = process_wait(*_impl, _errcode);
+				std::error_code ec;
+				int result = process_wait(*_impl,ec);
 
-				std::lock_guard<std::mutex> lock(_mutex);
+				if(ec)
+				{
+					throw std::system_error(ec);
+				}
 
-				_joined = true;
-
-				_condition.notify_all();
+				return result;
 			}
+
 		private:
-			bool							_joined;
-			exec_options					_options;
-			std::unique_ptr<process>		_impl;
-			std::mutex						_mutex;
-			std::condition_variable			_condition;
-			std::thread						_waiter;
-			io::io_service					_ioservice;
-			std::unique_ptr<io::pipe>		_in;
-			std::unique_ptr<io::pipe>		_out;
-			std::unique_ptr<io::pipe>		_err;
-			int								_exit_code;
-			std::error_code					_errcode;
+			std::unique_ptr<process>								_impl;
+			std::mutex												_mutex;
+			std::thread												_wait_thread;
+			std::error_code 										_ec;
+			int 													_exit_code;
+			std::unique_ptr<io::pipe>								_in;
+			std::unique_ptr<io::pipe>								_out;
+			std::unique_ptr<io::pipe>								_err;
+			std::function<void(int exitcode,std::error_code & ec)>	_wait;
 		};
 
 	}

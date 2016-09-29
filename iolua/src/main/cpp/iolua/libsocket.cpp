@@ -1,4 +1,4 @@
-#include <iolua/libio.hpp>
+#include <iolua/libsocket.hpp>
 #include <iolua/task.hpp>
 #include <lemon/log/log.hpp>
 #include <iolua/serializer.h>
@@ -299,27 +299,17 @@ namespace iolua {
 			}
 		}, ec);
 
+		promise->unref();
+		object->unref();
+
 		if (ec) {
-			object->unref();
+
 			return luaL_error(L, "sock(%d) send error :%s", id, ec.message().c_str());
 		}
-
-		object->unref();
 
 		return lua_yieldk(L, 0, promise_id, &io_promise::k_func);
 	}
 
-
-	static luaL_Reg socket_funcs[] = {
-		{ "close", lsocket_close },
-		{ "bind", lsocket_bind },
-		{ "listen", lsocket_listen },
-		{ "accept", lsocket_accept },
-		{ "send", lsocket_send },
-		{ "recv", lsocket_recv },
-		{ "connect", lsocket_connect },
-		{ NULL, NULL }
-	};
 
 	static int lsocket_create(lua_State* L)
 	{
@@ -329,47 +319,9 @@ namespace iolua {
 		
 		lua_pushinteger(L,tk->context()->create_io_object(socket));
 
-		if (luaL_newmetatable(L, "iolua_socket"))
-		{
-			lua_pushstring(L, "__index");
-			
-			luaL_newlibtable(tk->L(), socket_funcs);
-
-			lua_pushlightuserdata(tk->L(), tk);
-
-			luaL_setfuncs(tk->L(), socket_funcs, 1);
-
-			lua_rawset(L, -3);
-		}
-
-		lua_setmetatable(L, -2);
-
 		return 1;
 	}
 
-	static int lsocket_open(lua_State* L)
-	{
-		task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
-
-		lua_pushvalue(L, -1);
-
-		if (luaL_newmetatable(L, "iolua_socket"))
-		{
-			lua_pushstring(L, "__index");
-
-			luaL_newlibtable(tk->L(), socket_funcs);
-
-			lua_pushlightuserdata(tk->L(), tk);
-
-			luaL_setfuncs(tk->L(), socket_funcs, 1);
-
-			lua_rawset(L, -3);
-		}
-
-		lua_setmetatable(L, -2);
-
-		return 1;
-	}
 
 
 	static luaL_Reg funcs[] = {
@@ -381,7 +333,6 @@ namespace iolua {
 		{ "send", lsocket_send },
 		{ "recv", lsocket_recv },
 		{ "connect", lsocket_connect },
-		{ "open", lsocket_open },
 		{ NULL, NULL }
 	};
 

@@ -61,7 +61,10 @@ namespace iolua {
 	public:
 		io_promise(iolua_State * context):_context(context) {}
 	
-		virtual int complete(lua_State* L) = 0;
+		virtual int complete(lua_State* L)
+		{
+			return 0;
+		};
 		
 		iolua_State * context()
 		{
@@ -143,6 +146,20 @@ namespace iolua {
 		int complete(lua_State *L);
 
 	private:
+		std::error_code					_ec;
+	};
+
+	class io_promise_exec_wait: public io_promise
+	{
+	public:
+		using io_promise::io_promise;
+
+		void wait(int exit_code, const std::error_code & ec);
+
+		int complete(lua_State *L);
+
+	private:
+		int 							_exit_code;
 		std::error_code					_ec;
 	};
 }

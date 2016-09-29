@@ -23,10 +23,38 @@ namespace iolua {
         return 1;
     }
 
+    static int task_sleep(lua_State *L)
+    {
+        task * tk = (task*)lua_touserdata(L,lua_upvalueindex(1));
+
+        auto task_id = tk->id();
+
+        auto context = tk->context();
+
+        auto &timer_wheel = tk->context()->timer_wheel();
+
+        auto promise_id = context->create_io_promise<io_promise>();
+
+        timer_wheel.create_timer([=](){
+
+            auto promise = context->query_io_promise(promise_id);
+
+            if (promise)
+            {
+                promise->unref();
+                context->wakeup(task_id);
+            }
+
+        },std::chrono::milliseconds(luaL_checkinteger(L,1)));
+
+        return lua_yieldk(L, 0, promise_id, &io_promise::k_func);
+    }
+
     static luaL_Reg funcs[] = {
 
             { "create", task_create },
             { "id", task_self },
+            { "sleep", task_sleep },
             { NULL, NULL }
     };
 

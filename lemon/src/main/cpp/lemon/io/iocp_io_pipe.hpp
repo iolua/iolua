@@ -24,16 +24,11 @@ namespace lemon{
 		{
 
 		public:
-			iocp_io_pipe(iocp_io_service & service)
+			iocp_io_pipe(iocp_io_service & service, const std::string & origin)
 			{
 				typedef std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>, wchar_t> convert;
 
-				lemon::uuids::random_generator random;
-
-				std::string name = "\\\\.\\pipe\\lemon-";
-
-				name = name + lemon::uuids::to_string(random());
-
+				auto name = std::string("\\\\.\\pipe\\lemon-") + origin;
 
 				SECURITY_ATTRIBUTES sa;
 
@@ -48,28 +43,28 @@ namespace lemon{
 				convert conv;
 
 				reader = CreateNamedPipeW(
-					conv.from_bytes(name).c_str(),
-					PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-					PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-					PIPE_UNLIMITED_INSTANCES,
-					1024,
-					1024,
-					5000,
-					&sa);
+						conv.from_bytes(name).c_str(),
+						PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+						PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+						PIPE_UNLIMITED_INSTANCES,
+						1024,
+						1024,
+						5000,
+						&sa);
 
 				if (reader == INVALID_HANDLE_VALUE)
 				{
-					 throw std::system_error(GetLastError(), std::system_category());
+					throw std::system_error(GetLastError(), std::system_category());
 				}
 
 				writer = CreateFileW(
-					conv.from_bytes(name).c_str(),
-					GENERIC_WRITE,
-					0,
-					&sa,
-					OPEN_EXISTING,
-					FILE_FLAG_OVERLAPPED,
-					NULL);
+						conv.from_bytes(name).c_str(),
+						GENERIC_WRITE,
+						0,
+						&sa,
+						OPEN_EXISTING,
+						FILE_FLAG_OVERLAPPED,
+						NULL);
 
 				if (writer == INVALID_HANDLE_VALUE)
 				{
@@ -82,6 +77,11 @@ namespace lemon{
 				_out.reset(new iocp_io_stream(service, writer));
 			}
 
+
+			iocp_io_pipe(iocp_io_service & service):iocp_io_pipe(service,random_name())
+			{
+			}
+
 			io_stream & in()
 			{
 				return *_in;
@@ -90,6 +90,29 @@ namespace lemon{
 			io_stream & out()
 			{
 				return *_out;
+			}
+
+			io_stream* release_in()
+			{
+				return _in.release();
+			}
+
+			io_stream* release_out()
+			{
+				return _out.release();
+			}
+
+		private:
+
+			static const std::string random_name()
+			{
+				lemon::uuids::random_generator r;
+
+				std::stringstream stream;
+
+				stream << "/tmp/lemon-" << lemon::uuids::to_string(r());
+
+				return stream.str();
 			}
 
 		private:

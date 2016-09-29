@@ -30,15 +30,9 @@ namespace lemon {
         class reactor_io_pipe : private nocopy
         {
         public:
-            reactor_io_pipe(io_service & service)
+            reactor_io_pipe(io_service & service,const std::string & origin_name)
             {
-                lemon::uuids::random_generator r;
-
-                std::stringstream stream;
-
-                stream << "/tmp/lemon-" << lemon::uuids::to_string(r());
-
-                auto fifo = stream.str();
+                auto fifo = std::string("/tmp/lemon-") + origin_name;
 
                 if(mkfifo(fifo.c_str(),S_IRWXU) && (errno!=EEXIST))
                 {
@@ -60,8 +54,12 @@ namespace lemon {
                 }
 
 
-                _in.reset(new reactor_io_stream(service,in));
-                _out.reset(new reactor_io_stream(service,out));
+                _in.reset(new reactor_io_stream(service, (handler) in));
+                _out.reset(new reactor_io_stream(service, (handler) out));
+            }
+
+            reactor_io_pipe(io_service & service):reactor_io_pipe(service,random_name())
+            {
 
             }
 
@@ -73,6 +71,35 @@ namespace lemon {
             io_stream & out()
             {
                 return *_out;
+            }
+
+            io_stream* release_in()
+            {
+                return _in.release();
+            }
+
+            io_stream* release_out()
+            {
+                return _out.release();
+            }
+
+            void close_in()
+            {
+                _in.reset();
+            }
+
+            void close_out()
+            {
+                _out.reset();
+            }
+
+        private:
+
+            static const std::string random_name()
+            {
+                lemon::uuids::random_generator r;
+
+                return lemon::uuids::to_string(r());
             }
 
         private:

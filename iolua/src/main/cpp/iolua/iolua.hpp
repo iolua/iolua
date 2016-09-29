@@ -15,6 +15,7 @@
 #include <iolua/shared_object.hpp>
 #include <iolua/chan.hpp>
 #include <iolua/io.hpp>
+#include <lemon/timewheel.hpp>
 namespace iolua {
 
     class task;
@@ -96,6 +97,11 @@ namespace iolua {
 			return _io_promises.addref_and_fetch(id);
 		}
 
+		lemon::timer_wheel & timer_wheel()
+		{
+			return _timer_wheel;
+		}
+
     private:
         void do_schedule();
     private:
@@ -111,6 +117,7 @@ namespace iolua {
 		shared_object_cached<channel>					_channels;
 		io_object_cached								_io_objects;
 		shared_object_cached<io_promise>				_io_promises;
+		lemon::timer_wheel								_timer_wheel = { 10 };
     };
 }
 

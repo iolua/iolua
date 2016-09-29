@@ -35,7 +35,7 @@ namespace iolua {
 
         auto file = lemon::fs::filepath(debug.source + 1).filename();
 
-		auto l = (lemon::log::logger*)luaL_checkudata(L, 1, "iolua_logger");
+		auto l = *(lemon::log::logger**)luaL_checkudata(L, 1, "iolua_logger");
 
         l->write(level, std::string(msg),file.string().c_str(),debug.currentline);
 
@@ -86,7 +86,9 @@ namespace iolua {
     {
         auto l = &lemon::log::get(luaL_checkstring(L,1));
 
-        lua_pushlightuserdata(L,(void*)l);
+        auto buff = (uintptr_t*)lua_newuserdata(L, sizeof(uintptr_t));
+
+        *buff = (uintptr_t)l;
 
         if(luaL_newmetatable(L, "iolua_logger"))
         {

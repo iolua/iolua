@@ -5,14 +5,18 @@
 #include <iolua/libtask.hpp>
 #include <iolua/liblog.hpp>
 #include <iolua/libchan.hpp>
-#include <iolua/libio.hpp>
-
+#include <iolua/libsocket.hpp>
+#include <iolua/libpipe.hpp>
+#include <iolua/libexec.hpp>
+#include <iolua/libfs.hpp>
 namespace iolua {
 
     static auto& logger = lemon::log::get("iolua_dispatcher");
 
     iolua_State::iolua_State()
     {
+        _timer_wheel.start();
+
         _L = luaL_newstate();
 
         if (_L == nullptr)
@@ -26,6 +30,8 @@ namespace iolua {
         {
             _workers.push_back(std::thread(&iolua_State::do_schedule,this));
         }
+
+
     }
 
     iolua_State::~iolua_State()
@@ -176,6 +182,9 @@ namespace iolua {
         iolua_openlog(t);
 		iolua_openchan(t);
 		iolua_openio(t);
+        iolua_openpipe(t);
+        iolua_open_exec(t);
+        iolua_open_fs(t);
     }
 
     bool iolua_State::wakeup(std::uint32_t taskid)

@@ -18,6 +18,7 @@
 #include <utility>
 #include <iostream>
 #include <unordered_map>
+#include <lemon/io/handler.hpp>
 
 namespace lemon{
     namespace os {
@@ -49,7 +50,7 @@ namespace lemon{ namespace os{
     class process : private  nocopy
     {
     public:
-        process(const std::string & path,int in,int out,int err)
+        process(const std::string & path,io::handler in,io::handler out,io::handler err)
                 :_path(path)
                 ,_workpath(fs::current_path())
                 ,_logger(lemon::log::get("process"))
