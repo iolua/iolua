@@ -19,15 +19,15 @@ end
 
 run_unittest("fs_test.lua",counter)
 
---run_unittest("exec_test.lua",counter)
+run_unittest("exec_test.lua",counter)
+
+run_unittest("pipe_test.lua",counter)
+
+run_unittest("echo_test.lua",counter)
 --
---run_unittest("pipe_test.lua",counter)
+run_unittest("tcp_test.lua",counter)
 --
---run_unittest("echo_test.lua",counter)
---
---run_unittest("tcp_test.lua",counter)
---
---run_unittest("chan_test.lua",counter)
+run_unittest("chan_test.lua",counter)
 
 
 

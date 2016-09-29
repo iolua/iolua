@@ -3,7 +3,7 @@
 
 #include <iolua/iolua.hpp>
 namespace iolua {
-	void iolua_openio(task * tk);
+	void iolua_open_socket(task *tk);
 }
 
 

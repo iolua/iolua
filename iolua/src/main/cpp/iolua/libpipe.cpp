@@ -42,7 +42,7 @@ namespace iolua {
             {
                 promise->recv(trans,ec);
                 promise->unref();
-                context->wakeup(task_id);
+                context->wake_up(task_id);
             }
         },ec);
 
@@ -91,7 +91,7 @@ namespace iolua {
             {
                 promise->send(trans, ec);
                 promise->unref();
-                context->wakeup(task_id);
+                context->wake_up(task_id);
             }
         }, ec);
 

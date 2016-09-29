@@ -37,6 +37,8 @@ namespace iolua {
     iolua_State::~iolua_State()
     {
         lua_close(_L);
+
+        join();
     }
 
     void iolua_State::do_schedule()
@@ -102,11 +104,25 @@ namespace iolua {
                     break;
             }
 
+            if(_tasks.empty())
+            {
+                _exit = true;
 
+                _condition.notify_all();
+            }
         }
     }
 
-    inline int lcreate(lua_State *L)
+    void iolua_State::exit()
+    {
+        std::unique_lock<lemon::spin_mutex> locker(_mutex);
+
+        _exit = true;
+
+        _condition.notify_all();
+    }
+
+    inline int lua_task_create(lua_State *L)
     {
 
         iolua_State * sc = (iolua_State*)lua_touserdata(L,lua_upvalueindex(1));
@@ -120,7 +136,7 @@ namespace iolua {
     {
         lua_pushlightuserdata(_L,this);
 
-        lua_pushcclosure(_L,lcreate,1);
+        lua_pushcclosure(_L, lua_task_create, 1);
 
         lua_pushstring(_L,name.c_str());
 
@@ -181,17 +197,17 @@ namespace iolua {
         iolua_opentask(t);
         iolua_openlog(t);
 		iolua_openchan(t);
-		iolua_openio(t);
+        iolua_open_socket(t);
         iolua_openpipe(t);
         iolua_open_exec(t);
         iolua_open_fs(t);
     }
 
-    bool iolua_State::wakeup(std::uint32_t taskid)
+    bool iolua_State::wake_up(std::uint32_t task_id)
     {
         std::unique_lock<lemon::spin_mutex> lock(_mutex);
 
-        auto iter = _tasks.find(taskid);
+        auto iter = _tasks.find(task_id);
 
         if (iter != _tasks.end())
         {
@@ -203,9 +219,9 @@ namespace iolua {
 				return true;
 			}
 
-			if (_sleepingQ.count(taskid))
+			if (_sleepingQ.count(task_id))
 			{
-				_sleepingQ.erase(taskid);
+				_sleepingQ.erase(task_id);
 
 				_runningQ.push(iter->second);
 			}

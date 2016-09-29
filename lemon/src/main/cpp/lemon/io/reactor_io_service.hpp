@@ -62,7 +62,14 @@ namespace lemon{
                 if(_dispatcher.joinable()) _dispatcher.join();
             }
 
-            virtual void close() = 0;
+            void close()
+            {
+                doclose();
+
+                _condition.notify_all();
+            }
+
+            virtual void doclose() = 0;
 
             void run_one(std::error_code & ec)
             {
@@ -122,7 +129,11 @@ namespace lemon{
                     complete->complete();
 
                     delete complete;
+
+                    return;
                 }
+
+                ec = make_error_code(errc::io_service_closed);
             }
 
 

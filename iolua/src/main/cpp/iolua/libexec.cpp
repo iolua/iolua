@@ -24,7 +24,7 @@ namespace iolua {
             {
                 promise->wait(code, ec);
                 promise->unref();
-                context->wakeup(task_id);
+                context->wake_up(task_id);
             }
         });
 

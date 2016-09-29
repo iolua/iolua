@@ -9,7 +9,17 @@ namespace lemon {
 
     timer_wheel::~timer_wheel()
     {
+        if(_worker.joinable())
+        {
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
 
+                _exit = true;
+            }
+
+
+            _worker.join();
+        }
     }
 
 

@@ -1,7 +1,17 @@
 
-local netstat = exec.create("ps","o")
+local netstat = exec.create("netstat","o")
 
-netstat:start("-ef")
+netstat:start("-an")
+
+local o = netstat:pipe("o")
+
+task.create("exec_print.lua",o)
+
+netstat:wait()
+
+task.sleep(1000)
+
+netstat:start("-an")
 
 local o = netstat:pipe("o")
 

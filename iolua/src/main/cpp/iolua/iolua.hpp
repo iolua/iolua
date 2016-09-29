@@ -35,7 +35,9 @@ namespace iolua {
 
         std::uint32_t create_task(lua_State *L);
 
-        bool wakeup(std::uint32_t taskid);
+        bool wake_up(std::uint32_t task_id);
+
+        void exit();
 
 		std::uint32_t create_channel()
 		{

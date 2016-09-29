@@ -42,7 +42,7 @@ namespace iolua {
             if (promise)
             {
                 promise->unref();
-                context->wakeup(task_id);
+                context->wake_up(task_id);
             }
 
         },std::chrono::milliseconds(luaL_checkinteger(L,1)));

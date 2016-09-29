@@ -68,34 +68,9 @@ namespace lemon {
 			}
 
 			exec(lemon::io::io_service& service, const std::string & name, int options)
+                :_service(service),_name(name),_options(options)
 			{
-				auto found = lookup(name);
 
-				if (!std::get<1>(found))
-				{
-					throw std::system_error((int)errc::command_not_found, os_error_category());
-				}
-
-				if ((options & (int)exec_options::pipe_in))
-				{
-					_in.reset(new lemon::io::pipe(service));
-				}
-
-				if ((options & (int)exec_options::pipe_out))
-				{
-					_out.reset(new lemon::io::pipe(service));
-				}
-
-				if ((options & (int)exec_options::pipe_error))
-				{
-					_err.reset(new lemon::io::pipe(service));
-				}
-
-				_impl.reset(new process(
-					std::get<0>(found),
-					_in ? _in->in().get() : io::handler(),
-					_out ? _out->out().get() : io::handler(),
-					_err ? _err->out().get() : io::handler()));
 			}
 
 			~exec()
@@ -128,6 +103,8 @@ namespace lemon {
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
 
+                reset();
+
 				std::error_code err;
 				process_start(*_impl, err, args);
 
@@ -135,6 +112,11 @@ namespace lemon {
 				{
 					throw std::system_error(err);
 				}
+
+                if(_wait_thread.joinable())
+                {
+                    _wait_thread.join();
+                }
 
 				_wait_thread = std::thread([&]{
 
@@ -161,6 +143,8 @@ namespace lemon {
 
 				if(_err) _err->close_out();
 			}
+
+
 
 			template <typename ...Args>
 			int run(Args &&...args)
@@ -228,6 +212,39 @@ namespace lemon {
 				return result;
 			}
 
+        private:
+
+            void reset()
+            {
+                auto found = lookup(_name);
+
+                if (!std::get<1>(found))
+                {
+                    throw std::system_error((int)errc::command_not_found, os_error_category());
+                }
+
+                if ((_options & (int)exec_options::pipe_in))
+                {
+                    _in.reset(new lemon::io::pipe(_service));
+                }
+
+                if ((_options & (int)exec_options::pipe_out))
+                {
+                    _out.reset(new lemon::io::pipe(_service));
+                }
+
+                if ((_options & (int)exec_options::pipe_error))
+                {
+                    _err.reset(new lemon::io::pipe(_service));
+                }
+
+                _impl.reset(new process(
+                        std::get<0>(found),
+                        _in ? _in->in().get() : io::handler(),
+                        _out ? _out->out().get() : io::handler(),
+                        _err ? _err->out().get() : io::handler()));
+            }
+
 		private:
 			std::unique_ptr<process>								_impl;
 			std::mutex												_mutex;
@@ -238,6 +255,9 @@ namespace lemon {
 			std::unique_ptr<io::pipe>								_out;
 			std::unique_ptr<io::pipe>								_err;
 			std::function<void(int exitcode,std::error_code & ec)>	_wait;
+			lemon::io::io_service									&_service;
+            std::string                                             _name;
+            int                                                     _options;
 		};
 
 	}

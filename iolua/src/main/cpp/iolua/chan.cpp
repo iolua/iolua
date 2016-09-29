@@ -34,7 +34,7 @@ namespace iolua {
 				_selectQ.pop();
 			}
 
-			if(_context->wakeup(id))
+			if(_context->wake_up(id))
 			{
 				return;
 			}

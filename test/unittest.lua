@@ -5,6 +5,8 @@ local c,file = ...
 
 local f = assert(loadfile(file), "file not found: " .. file)
 
+logger:debug("run %s ...",file)
+
 f(table.unpack(table.pack(...),3))
 
 local endtime = os.time()

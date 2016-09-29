@@ -121,7 +121,7 @@ namespace iolua {
 				promise->accept(socket, addr, ec);
 				promise->unref();
                 lemonD(logger,"wake-up task(%d)", task_id);
-				context->wakeup(task_id);
+				context->wake_up(task_id);
 			}
 
 		}, ec);
@@ -178,7 +178,7 @@ namespace iolua {
 				{
 					promise->connect(ec);
 					promise->unref();
-					context->wakeup(task_id);
+					context->wake_up(task_id);
 				}
 			}, ec);
 
@@ -239,7 +239,7 @@ namespace iolua {
 			{
 				promise->recv(trans,ec);
 				promise->unref();
-				context->wakeup(task_id);
+				context->wake_up(task_id);
 			}
 		},ec);
 
@@ -295,7 +295,7 @@ namespace iolua {
 			{
 				promise->send(trans, ec);
 				promise->unref();
-				context->wakeup(task_id);
+				context->wake_up(task_id);
 			}
 		}, ec);
 
@@ -340,7 +340,7 @@ namespace iolua {
 		
 
 
-	void iolua_openio(task * tk)
+	void iolua_open_socket(task *tk)
 	{
 		luaL_newlibtable(tk->L(), funcs);
 

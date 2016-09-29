@@ -36,10 +36,10 @@ namespace lemon{
 
             ~reactor_io_service_epoll()
             {
-                close();
+                doclose();
             }
 
-            void close()
+            void doclose()
             {
                 if(_epoll != -1) {
                     ::close(_epoll);
