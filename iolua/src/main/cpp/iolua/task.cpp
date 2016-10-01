@@ -59,6 +59,8 @@ namespace iolua {
             lua_close(_L);
             throw std::system_error(make_error_code(errc::create_task_error),"pass argument to new task error");
         }
+
+
     }
 
     task::~task()

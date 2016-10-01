@@ -28,5 +28,4 @@ int main(int args, char** argv) {
         std::cerr << e.what() << std::endl;
     }
 
-
 }

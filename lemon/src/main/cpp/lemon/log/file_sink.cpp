@@ -100,14 +100,39 @@ namespace lemon{ namespace log{
 			std::chrono::duration_cast<std::chrono::seconds>(msg.TS.time_since_epoch()).count() * 1000
 			;
 
+		std::string level;
 
-		_stream << tm->tm_year + 1900 << "-" << tm->tm_mon << "-" << tm->tm_mday << " "
+		switch (msg.LEVEL)
+		{
+			case level::error:
+				level = "error";
+				break;
+			case level::warn:
+				level = "warn";
+				break;
+			case level::info:
+				level = "info";
+				break;
+			case level::debug:
+				level = "debug";
+				break;
+			case level::trace:
+				level = "trace";
+				break;
+			case level::verbose:
+			default:
+				level = "verbose";
+				break;
+		}
 
-			<< tm->tm_hour << ":" << tm->tm_min << ":" << tm->tm_sec << "."
 
-			<< std::setw(4) << std::setfill('0') <<milliseconds << " "
+		_stream << tm->tm_year + 1900 << "-" << std::setw(2) << std::setfill('0') << tm->tm_mon << "-" << std::setw(2) << std::setfill('0') << tm->tm_mday << " "
 
-			<< msg.Source << " (" << fs::filepath(msg.File).filename() << ":" << msg.Lines << ") " << msg.Content << std::endl;
+                << std::setw(2) << std::setfill('0') << tm->tm_hour << ":" << std::setw(2) << std::setfill('0') << tm->tm_min << ":" << std::setw(2) << std::setfill('0') << tm->tm_sec << "."
+
+			<< std::setw(4) << std::setfill('0') <<milliseconds << " ["
+
+			<< level << "] "<< msg.Source << " (" << fs::filepath(msg.File).filename() << ":" << msg.Lines << ") " << msg.Content << std::endl;
 
 		_stream.flush();
 	}
