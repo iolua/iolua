@@ -230,14 +230,14 @@ namespace iolua {
 
             if(lua_type(L,4) == LUA_TBOOLEAN)
             {
-                time_suffix = (bool)lua_toboolean(L, 4);
+                time_suffix = lua_toboolean(L, 4)?true:false;
 
                 offset = 5;
             }
         }
         else if(lua_type(L,3) == LUA_TBOOLEAN)
         {
-            time_suffix = (bool)lua_toboolean(L, 3);
+            time_suffix = lua_toboolean(L, 3)?true:false;
 
             offset = 4;
         }

@@ -16,6 +16,7 @@
 #include <iolua/chan.hpp>
 #include <iolua/io.hpp>
 #include <lemon/timewheel.hpp>
+#include <lemon/log/log.hpp>
 namespace iolua {
 
     class task;

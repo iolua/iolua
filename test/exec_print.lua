@@ -10,11 +10,6 @@ while true do
         return
     end
 
-    if #buff < 1024 then
-        logger:debug("test :%s",buff)
-        return
-    end
-
-    logger:debug("test :%s",buff)
+    logger:debug("%s",buff)
 end
 

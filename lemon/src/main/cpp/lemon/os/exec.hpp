@@ -103,7 +103,12 @@ namespace lemon {
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
 
-                reset();
+                if(_wait_thread.joinable())
+                {
+                    _wait_thread.join();
+                }
+
+				reset();
 
 				std::error_code err;
 				process_start(*_impl, err, args);
@@ -112,11 +117,6 @@ namespace lemon {
 				{
 					throw std::system_error(err);
 				}
-
-                if(_wait_thread.joinable())
-                {
-                    _wait_thread.join();
-                }
 
 				_wait_thread = std::thread([&]{
 
@@ -137,11 +137,11 @@ namespace lemon {
 					_impl.reset();
 				});
 
-				if(_in) _in->close_in();
+				if (_in) _in->close_in();
 
-				if(_out) _out->close_out();
+				if (_out) _out->close_out();
 
-				if(_err) _err->close_out();
+				if (_err) _err->close_out();
 			}
 
 

@@ -9,7 +9,7 @@
 #define LEMON_IO_IOCP_IO_STREAM_HPP
 
 #include <utility>
-
+#include <iostream>
 #include <lemon/io/buff.hpp>
 #include <lemon/io/iocp_op.hpp>
 #include <lemon/io/iocp_io_object.hpp>
@@ -79,7 +79,7 @@ namespace lemon{
 			}
 		public:
 			template <typename Callback>
-			void read(buffer buff, Callback && callback)
+			void read(buffer buff, Callback && callback, std::error_code & )
 			{
 				auto op = std::unique_ptr<iocp_op>(new iocp_read_op<Callback>(get(), std::forward<Callback>(callback)));
 
@@ -94,7 +94,29 @@ namespace lemon{
 						service().complete(op.get());
 					}
 				}
-				
+			
+					
+				op.release();
+			}
+
+
+			template <typename Callback>
+			void write(const_buffer buff, Callback && callback, std::error_code &)
+			{
+				auto op = std::unique_ptr<iocp_op>(new iocp_write_op<Callback>(get(), std::forward<Callback>(callback)));
+
+				add_op(op.get());
+
+				DWORD read;
+
+				if (!WriteFile(get(), buff.data, (DWORD)buff.length, &read, op.get()))
+				{
+					if (ERROR_IO_PENDING != GetLastError()) {
+						op->cancel(std::error_code(GetLastError(), std::system_category()));
+						service().complete(op.get());
+					}
+				}
+
 				op.release();
 			}
 		};

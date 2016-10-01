@@ -61,7 +61,7 @@ namespace iolua {
 	public:
 		io_promise(iolua_State * context):_context(context) {}
 	
-		virtual int complete(lua_State* L)
+		virtual int complete(lua_State*)
 		{
 			return 0;
 		};

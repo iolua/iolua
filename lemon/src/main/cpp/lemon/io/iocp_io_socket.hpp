@@ -240,7 +240,7 @@ namespace lemon{
 			}
 
 			template <typename Callback>
-			void recv(buffer buff, int flags, Callback && callback)
+			void recv(buffer buff, int flags, Callback && callback, std::error_code &)
 			{
 				auto op = std::unique_ptr<iocp_op>(new iocp_read_op<Callback>(get(), std::forward<Callback>(callback)));
 
@@ -264,7 +264,7 @@ namespace lemon{
 			}
 
 			template <typename Callback>
-			void send(const_buffer buff, int flags, Callback && callback)
+			void send(const_buffer buff, int flags, Callback && callback, std::error_code &)
 			{
 				auto op = std::unique_ptr<iocp_op>(new iocp_write_op<Callback>(get(), std::forward<Callback>(callback)));
 

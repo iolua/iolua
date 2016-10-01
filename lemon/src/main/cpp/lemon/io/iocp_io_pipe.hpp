@@ -9,6 +9,7 @@
 #define LEMON_IO_IOCP_IO_PIPE_HPP
 #include <locale>
 #include <memory>
+#include <sstream>
 
 #include <lemon/config.h>
 #include <lemon/uuid.hpp>
@@ -47,8 +48,8 @@ namespace lemon{
 						PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
 						PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
 						PIPE_UNLIMITED_INSTANCES,
-						1024,
-						1024,
+						1024 * 1024,
+						1024 * 1024,
 						5000,
 						&sa);
 
@@ -100,6 +101,16 @@ namespace lemon{
 			io_stream* release_out()
 			{
 				return _out.release();
+			}
+
+			void close_in()
+			{
+				_in.reset();
+			}
+
+			void close_out()
+			{
+				_out.reset();
 			}
 
 		private:

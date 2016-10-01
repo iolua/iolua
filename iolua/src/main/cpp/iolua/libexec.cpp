@@ -4,7 +4,7 @@
 
 namespace iolua {
 
-    auto & logger = lemon::log::get("exec");
+	static auto & logger = lemon::log::get("exec");
 
     static int lexec_wait(lua_State *L)
     {

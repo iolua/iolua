@@ -2,6 +2,9 @@
 #include <iolua/iolua.hpp>
 #include <iolua/task.hpp>
 namespace iolua {
+
+	static auto & logger = lemon::log::get("console");
+
 	io_object::io_object(lemon::io::io_object* object, iolua_State * context)
 		:_object(object),_context(context)
 	{
@@ -103,6 +106,7 @@ namespace iolua {
 		}
 		else {
 			lua_pushboolean(L, true);
+			
 			lua_pushlstring(L, (const char*)&_buff[0], _trans);
 			return 2;
 		}

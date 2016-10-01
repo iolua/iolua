@@ -12,7 +12,7 @@ cli:set_name('ik')
 cli
     :command('install')
     :action(function(options)
-    
+        
     end)
 
 local args, err = cli:parse(table.pack(...))

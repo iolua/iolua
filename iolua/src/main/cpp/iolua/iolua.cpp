@@ -36,9 +36,9 @@ namespace iolua {
 
     iolua_State::~iolua_State()
     {
-        lua_close(_L);
-
         join();
+
+		lua_close(_L);
     }
 
     void iolua_State::do_schedule()
