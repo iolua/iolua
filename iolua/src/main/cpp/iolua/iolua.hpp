@@ -6,6 +6,7 @@
 #include <thread>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <condition_variable>
 
 #include <lua/lua.hpp>
@@ -17,6 +18,7 @@
 #include <iolua/io.hpp>
 #include <lemon/timewheel.hpp>
 #include <lemon/log/log.hpp>
+
 namespace iolua {
 
     class task;
@@ -121,6 +123,7 @@ namespace iolua {
 		io_object_cached								_io_objects;
 		shared_object_cached<io_promise>				_io_promises;
 		lemon::timer_wheel								_timer_wheel = { 10 };
+		std::unordered_set<std::string>					_search_paths;
     };
 }
 
