@@ -8,11 +8,9 @@ local cli = require('cliargs')
 
 cli:set_name('ik')
 
-
 cli
     :command('install')
     :action(function(options)
-        
     end)
 
 local args, err = cli:parse(table.pack(...))
@@ -20,8 +18,9 @@ local args, err = cli:parse(table.pack(...))
 if not args and err then
     console:error(err)
 elseif args then
-    print('git with no command')
+    cli:print_help()
 end
+
 
 
 
