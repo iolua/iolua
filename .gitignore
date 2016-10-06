@@ -7,7 +7,8 @@
 # Precompiled Headers
 *.gch
 *.pch
-
+*.ilk
+*.pdb
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -58,8 +59,9 @@
 *.app
 .idea
 build
-bin
 repo
 .gsmake
 .vscode
 .repo
+
+./ik/log

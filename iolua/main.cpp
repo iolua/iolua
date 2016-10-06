@@ -26,6 +26,7 @@ int main(int args, char** argv) {
 
     } catch (std::exception & e) {
         std::cerr << e.what() << std::endl;
+        state.exit();
     }
 
 	lemon::log::close();
