@@ -64,4 +64,7 @@ repo
 .vscode
 .repo
 
-./ik/log
+ik/log
+bin/iolua
+bin/lemon-test
+lemon/bin/
