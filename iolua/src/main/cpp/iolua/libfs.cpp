@@ -183,6 +183,48 @@ namespace iolua {
     }
 
 
+    static int fs_native_path(lua_State* L)
+    {
+
+        int n = lua_gettop(L);
+
+        if(0 == n) {
+            return 0;
+        }
+
+        lemon::fs::filepath path;
+
+        for(int i =1; i <= n ; i ++)
+        {
+            path.append(lemon::fs::filepath(luaL_checkstring(L,i)));
+        }
+
+        lua_pushstring(L,path.string().c_str());
+
+        return 1;
+    }
+
+    static int fs_generic_path(lua_State* L)
+    {
+
+        int n = lua_gettop(L);
+
+        if(0 == n) {
+            return 0;
+        }
+
+        lemon::fs::filepath path;
+
+        for(int i =1; i <= n ; i ++)
+        {
+            path.append(lemon::fs::filepath(luaL_checkstring(L,i)));
+        }
+
+        lua_pushstring(L,path.generic_string().c_str());
+
+        return 1;
+    }
+
     static luaL_Reg funcs[] = {
             { "current_path", fs_current_path },
             { "exists", fs_exists },
@@ -193,6 +235,8 @@ namespace iolua {
             { "copy_file", fs_copy_file },
             { "file_size", fs_file_size },
             { "file_type", fs_file_type },
+            { "path", fs_native_path },
+            { "generic_path", fs_generic_path },
             { NULL, NULL }
     };
 

@@ -132,7 +132,10 @@ namespace lemon{ namespace fs{
 
             if(rhs._nodes.front() == string_type(1,'/'))
             {
-
+                if(!_nodes.empty())
+                {
+                    return *this;
+                }
             }
 
             _nodes.insert(_nodes.end(),rhs._nodes.begin(),rhs._nodes.end());

@@ -12,3 +12,4 @@ assert(fs.exists(fs.current_path() .. "/test"))
 
 fs.remove_file("test")
 
+logger:debug("path :%s",fs.path("/Users/yayanyang/Workspace/iolua"))
