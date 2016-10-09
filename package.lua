@@ -2,5 +2,5 @@ name "github.com/iolua/iolua"
 
 version "0.0.1"
 
-plugin "github.com/iolua/ik-clang" : localpath "./"
+plugin "github.com/iolua/ik-clang" : localpath "./ik-clang"
 
