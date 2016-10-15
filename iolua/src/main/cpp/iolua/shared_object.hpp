@@ -39,6 +39,8 @@ namespace iolua {
 			return _id;
 		}
 
+		virtual void close() = 0;
+
 	protected:
 		shared_object() {}
     private:
@@ -115,6 +117,8 @@ namespace iolua {
 
 			if (iter != _cached.end())
 			{
+				iter->second->close();
+
 				iter->second->unref();
 
 				_cached.erase(iter);

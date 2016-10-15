@@ -1,3 +1,6 @@
+log.console("","console","iolua")
+local console = log.open("console")
+
 local homepath = os.getenv('IK_HOME')
 
 if homepath == nil then
@@ -5,12 +8,10 @@ if homepath == nil then
     return
 end
 
-log.console("","console")
+
 log.file(homepath .. "/log","ik",true,"ik")
 
 
-
-local console = log.open("console")
 local logger = log.open("ik")
 
 

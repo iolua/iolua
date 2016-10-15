@@ -38,24 +38,29 @@ namespace iolua {
 			return luaL_error(L, "call recv on closed channel(%d)", id);
 		}
 
-		while (chan->do_select(tk->id()))
+		try
 		{
-			void * message = chan->read_message();
-
-			if (message != nullptr)
+			while (chan->do_select(tk->id()))
 			{
+				void * message = chan->read_message();
 
-				lua_settop(L, 0);
+				if (message != nullptr)
+				{
+					lua_settop(L, 0);
+					lua_pushcfunction(L, seri_unpack);
+					lua_pushlightuserdata(L, message);
+					lua_call(L, 1, LUA_MULTRET);
 
-				lua_pushboolean(L, 1);
-				lua_pushcfunction(L, seri_unpack);
-				lua_pushlightuserdata(L, message);
-				lua_call(L, 1, LUA_MULTRET);
-
-				return lua_gettop(L);
+					return lua_gettop(L);
+				}
 			}
 		}
+		catch (const std::system_error &e)
+		{
+			return luaL_error(L, "%s", e.what());
+		}
 
+		
 		chan->unref();
 
 		return lua_yieldk(L, 0, 0, &do_recv);
@@ -85,10 +90,9 @@ namespace iolua {
 		void * msg = lua_touserdata(L, 1);
 
 		c->write_message(msg);
-		lua_pushboolean(L, 1);
 		c->unref();
 
-		return 1;
+		return 0;
 	}
 
 	static int do_select(lua_State *L, int, lua_KContext);

@@ -192,9 +192,9 @@ namespace iolua {
             return 0;
         }
 
-        lemon::fs::filepath path;
+        lemon::fs::filepath path(luaL_checkstring(L, 1));
 
-        for(int i =1; i <= n ; i ++)
+        for(int i =2; i <= n ; i ++)
         {
             path.append(lemon::fs::filepath(luaL_checkstring(L,i)));
         }
@@ -213,12 +213,12 @@ namespace iolua {
             return 0;
         }
 
-        lemon::fs::filepath path;
+		lemon::fs::filepath path(luaL_checkstring(L, 1));
 
-        for(int i =1; i <= n ; i ++)
-        {
-            path.append(lemon::fs::filepath(luaL_checkstring(L,i)));
-        }
+		for (int i = 2; i <= n; i++)
+		{
+			path.append(lemon::fs::filepath(luaL_checkstring(L, i)));
+		}
 
         lua_pushstring(L,path.generic_string().c_str());
 

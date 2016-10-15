@@ -3,6 +3,7 @@
 #include <iolua/serializer.h>
 #include <lemon/log/log.hpp>
 #include <iolua/iolua.hpp>
+#include <lemon/fs/fs.hpp>
 
 namespace iolua {
 
@@ -10,8 +11,8 @@ namespace iolua {
 
     static int init_task(lua_State *L) {
         luaL_openlibs(L);
-        const char *filename = (const char *)lua_touserdata(L,1);
-        int err = luaL_loadfile(L, filename);
+
+        int err = luaL_loadfile(L, (const char *)lua_touserdata(L, 1));
         if (err != LUA_OK)
             lua_error(L);
         return 1;

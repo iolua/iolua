@@ -89,7 +89,9 @@ namespace iolua {
 
                 case task_state::closed :
                     _tasks.erase(task->id());
+					locker.unlock();
                     delete task;
+					locker.lock();
 
                     break;
 
@@ -98,9 +100,9 @@ namespace iolua {
                     lemonE(logger,"inner error :illegal task(%d) state(%d). ", task->id(),task->get_state());
 
                     _tasks.erase(task->id());
-
+					locker.unlock();
                     delete task;
-
+					locker.lock();
                     break;
             }
 

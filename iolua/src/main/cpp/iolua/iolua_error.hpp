@@ -7,7 +7,7 @@
 namespace iolua {
     enum class errc
     {
-        out_of_memory,create_task_error
+        out_of_memory,create_task_error, op_on_closed_chan
     };
 
     class io_error_category : public std::error_category
@@ -27,6 +27,8 @@ namespace iolua {
                     return "iolua out of memory";
                 case errc::create_task_error:
                     return "create task error";
+				case errc::op_on_closed_chan:
+					return "call method on closed chan";
             }
 
 			return "";

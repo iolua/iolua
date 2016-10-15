@@ -1,6 +1,6 @@
 #include <iolua/chan.hpp>
 #include <iolua/iolua.hpp>
-
+#include <iolua/iolua_error.hpp>
 namespace iolua {
 
 	static auto& logger = lemon::log::get("iolua");
@@ -13,7 +13,34 @@ namespace iolua {
 
 	channel::~channel()
 	{
+	
+	}
 
+	void channel::close()
+	{
+		
+
+		std::vector<uint32_t> blocks;
+
+		{
+			std::unique_lock<lemon::spin_mutex> lock(_mutex);
+
+			_closed = true;
+
+			while (!_selectQ.empty())
+			{
+				auto id = _selectQ.front();
+
+				blocks.push_back(id);
+
+				_selectQ.pop();
+			}
+		}
+
+		for (auto id : blocks)
+		{
+			_context->wake_up(id);
+		}
 	}
 
 	void channel::write_message(void * message)
@@ -43,6 +70,11 @@ namespace iolua {
 	void* channel::read_message()
 	{
 		std::unique_lock<lemon::spin_mutex> lock(_mutex);
+
+		if (_closed)
+		{
+			throw std::system_error(errc::op_on_closed_chan);
+		}
 
 		if (_messageQ.empty()) return nullptr;
 

@@ -1,17 +1,36 @@
-local config    = require "ik.config"
-local module    = {}
+return function ( modulename, ... )
+     local loader = {
+        reader          = chan.create(), -- read channel
+        writer          = chan.create(), -- write channel    
+    }
 
-function module.create( name, ... )
- 
-    local c = chan.create()
-    
-    task.create(config.homepath .. "/src/main/lua/ik/sandbox_init.lua",c,name,...)
+    setmetatable(loader, {
+        __index = function(self,name)
+            return function(self, ...)
+                chan.send(self.writer, name, ...)
+                local retargs = table.pack(chan.recv(self.reader))
+                
+                if retargs[1] then
+                    return table.unpack(retargs,2)
+                else
+                    error(string.format("\n\tcall %s method %s failed, %s",modulename, name, retargs[2]))
+                end
+            end
+        end,
 
-    local ret = table.pack(chan.recv(c))
+        __gc = function(self)
+            
+            chan.close(self.reader)
+            chan.close(self.writer)
+        end
+    })
 
-    chan.close(c)
+    for path in string.gmatch(package.path, "[^;]+") do
+        path = string.gsub(path, "%?%.lua","ik/sandbox_loader.lua")
+        if fs.exists(path) then
+            task.create(path,loader.reader,loader.writer,modulename, ...)
+        end
+    end
 
-    return table.unpack(ret,2)
+    return loader
 end
-
-return module

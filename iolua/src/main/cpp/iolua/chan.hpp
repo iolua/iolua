@@ -24,11 +24,14 @@ namespace iolua {
 
 		bool do_select(std::uint32_t task_id);
 
+		void close();
+
 	private:
 		iolua_State					*_context;
 		lemon::spin_mutex			_mutex;
 		std::queue<void*>			_messageQ;
 		std::queue<std::uint32_t>   _selectQ;
+		bool						_closed = false;
     };
 }
 

@@ -31,6 +31,8 @@ namespace iolua {
 			return reinterpret_cast<typename std::add_const<typename std::add_pointer<_Type>::type>::type>(_object.get());
 		}
 
+		void close() {}
+
 	private:
 		std::unique_ptr<lemon::io::io_object>	_object;
 		iolua_State *_context;
@@ -72,6 +74,8 @@ namespace iolua {
 		}
 
 		static int k_func(lua_State *L, int status, lua_KContext ctx);
+
+		void close() {}
 
 	private:
 		iolua_State			*_context;

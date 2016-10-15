@@ -1,21 +1,14 @@
-local console = log.open("console")
-local path = ...
-local packagefile = fs.path(path,"package.lua")
+local config    = require "ik.config"
+local ops       = require "ik.ops"
+local console   = log.open("console")
+local module    = {}
 
-
-console:debug("load module: %s", fs.path(path))
-console:debug("check file : %s", packagefile)
-
-if fs.exists(packagefile) then
-    console:debug("check file : %s -- success", packagefile)
-else
-    console:error("package.lua file not found\n\tdir: %s", path)
+function module.ctor()
+    return {}
 end
 
+function module:load(...)
+    print(self,...)
+end
 
-
-
-
-
-
-
+return module
