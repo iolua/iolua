@@ -10,6 +10,8 @@ while true do
         return
     end
 
+    if #buff == 0 then return end
+
     logger:debug("%s",buff)
 end
 

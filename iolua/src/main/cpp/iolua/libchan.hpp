@@ -4,7 +4,7 @@
 #include <iolua/iolua.hpp>
 
 namespace iolua {
-	void iolua_openchan(task * tk);
+	void iolua_open_chan(task *tk);
 }
 
 #endif //IOLUA_LIBCHAN_HPP

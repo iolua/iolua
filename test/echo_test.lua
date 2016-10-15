@@ -1,9 +1,31 @@
 local n = ...
-local c = chan.create()
-task.create("chan_test_echo.lua",c,n)
-for v = 1,n,1 do
-    chan.recv(c)
-    chan.send(c,"hello",v, "task")
+
+local duo_one = {
+    chan.create(),chan.create()
+}
+
+local duo_two = {
+    chan.create(),chan.create()
+}
+
+local c1 = chan.create()
+local c2 = chan.create()
+local logger = log.open("console")
+task.create("echo_echo.lua",duo_one,n)
+--task.create("echo_echo.lua",duo_two,n)
+for v = 1,n ,1 do
+--    local c = chan.select(duo_one[1],duo_two[1])
+      chan.recv(duo_one[1])
+
+--    if c == duo_one[1] then
+        chan.send(duo_one[2],v)
+--    else
+--        chan.send(duo_two[2],v)
+--    end
+
 end
 
-chan.close(c)
+--chan.close(duo_one[1])
+--chan.close(duo_one[2])
+--chan.close(duo_two[1])
+--chan.close(duo_two[2])

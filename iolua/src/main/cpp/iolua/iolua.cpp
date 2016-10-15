@@ -196,7 +196,7 @@ namespace iolua {
 
         iolua_opentask(t);
         iolua_openlog(t);
-		iolua_openchan(t);
+        iolua_open_chan(t);
         iolua_open_socket(t);
         iolua_openpipe(t);
         iolua_open_exec(t);

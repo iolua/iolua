@@ -20,27 +20,24 @@ namespace iolua {
 	{
 		std::uint32_t id;
 
-		for (;;)
 		{
-			{
-				std::unique_lock<lemon::spin_mutex> lock(_mutex);
+			std::unique_lock<lemon::spin_mutex> lock(_mutex);
 
-				_messageQ.push(message);
+			_messageQ.push(message);
 
-				if (_selectQ.empty())  return;
+			if (_selectQ.empty())  return;
 
-				id = _selectQ.front();
+			id = _selectQ.front();
 
-				_selectQ.pop();
-			}
-
-			if(_context->wake_up(id))
-			{
-				return;
-			}
+			_selectQ.pop();
 		}
 
+		if(_context->wake_up(id))
+		{
+			return;
+		}
 
+		lemonD(logger,"wake update task(%d) failed",id);
 	}
 
 	void* channel::read_message()

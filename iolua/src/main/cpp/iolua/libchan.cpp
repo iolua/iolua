@@ -44,6 +44,7 @@ namespace iolua {
 
 			if (message != nullptr)
 			{
+
 				lua_settop(L, 0);
 
 				lua_pushboolean(L, 1);
@@ -90,13 +91,13 @@ namespace iolua {
 		return 1;
 	}
 
-	static int lchan_select(lua_State *L)
+	static int do_select(lua_State *L, int, lua_KContext);
+
+	static int do_select(lua_State *L, int, lua_KContext)
 	{
 		task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
 
 		int n = lua_gettop(L);
-
-		std::vector<uint32_t> channels(n);
 
 		for (int i = 0; i < n; i++) {
 			auto channel = tk->context()->query_channel((uint32_t)luaL_checkinteger(L, i + 1));
@@ -114,7 +115,12 @@ namespace iolua {
 			}
 		}
 
-		return 0;
+		return lua_yieldk(L, 0, 0, &do_select);
+	}
+
+	static int lchan_select(lua_State *L)
+	{
+		return do_select(L, 0, 0);
 	}
 
 	static luaL_Reg funcs[] = {
@@ -132,20 +138,7 @@ namespace iolua {
 		{ NULL, NULL }
 	};
 
-	static const char * embed_script = 
-		"chan.recv = function(...)\n"
-			"while true do\n"
-				"local id = chan.select(...)\n"
-				"if id ~= nil then\n"
-					"local ret = table.pack(chan.rawrecv(id))\n"
-					"if ret[1] then return table.unpack(ret,2) end\n"
-				"end\n"
-				"coroutine.yield()\n"
-			"end\n"
-		"end\n"
-		;
-
-	void iolua_openchan(task * tk)
+	void iolua_open_chan(task *tk)
 	{
 		luaL_newlibtable(tk->L(), funcs);
 
@@ -155,9 +148,5 @@ namespace iolua {
 		
 		lua_setglobal(tk->L(), "chan");
 
-	/*	if (LUA_OK != luaL_dostring(tk->L(), embed_script)) {
-			lemonE(logger, "%s", lua_tostring(tk->L(), -1));
-			lua_pop(tk->L(), -1);
-		}*/
 	}
 }
