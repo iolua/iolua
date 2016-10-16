@@ -5,8 +5,10 @@ local config  = require "ik.config"
 local module = {}
 
 function module.get( ... )
-    local loader = sandbox("ik.loader")
-    loader:load("test",1,2,3)
+    local rootloader = sandbox("ik.loader")
+    if not rootloader:load(config.current_dir) then
+        console:error("package.lua file not found :%s",config.current_dir)
+    end
 end
 
 return module

@@ -1,5 +1,4 @@
 local console = log.open("console")
-local ops = require "ik.ops"
 
 
 local writer,reader,modulename = ...

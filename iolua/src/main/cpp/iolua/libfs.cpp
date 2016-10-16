@@ -225,6 +225,42 @@ namespace iolua {
         return 1;
     }
 
+	static int fs_native_parent_path(lua_State* L)
+	{
+		lemon::fs::filepath path(luaL_checkstring(L, 1));
+
+		lua_pushstring(L,path.parent_path().string().c_str());
+
+		return 1;
+	}
+
+	static int fs_generic_parent_path(lua_State* L)
+	{
+		lemon::fs::filepath path(luaL_checkstring(L, 1));
+
+		lua_pushstring(L, path.parent_path().generic_string().c_str());
+
+		return 1;
+	}
+
+	static int fs_generic_filename(lua_State* L)
+	{
+		lemon::fs::filepath path(luaL_checkstring(L, 1));
+
+		lua_pushstring(L, path.filename().generic_string().c_str());
+
+		return 1;
+	}
+
+	static int fs_native_filename(lua_State* L)
+	{
+		lemon::fs::filepath path(luaL_checkstring(L, 1));
+
+		lua_pushstring(L, path.filename().string().c_str());
+
+		return 1;
+	}
+
     static luaL_Reg funcs[] = {
             { "current_path", fs_current_path },
             { "exists", fs_exists },
@@ -237,6 +273,10 @@ namespace iolua {
             { "file_type", fs_file_type },
             { "path", fs_native_path },
             { "generic_path", fs_generic_path },
+			{ "parent_path", fs_native_parent_path },
+			{ "generic_parent_path", fs_generic_parent_path },
+			{ "filename", fs_native_filename },
+			{ "generic_filename", fs_generic_filename },
             { NULL, NULL }
     };
 

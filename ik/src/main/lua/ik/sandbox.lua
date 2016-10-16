@@ -25,12 +25,11 @@ return function ( modulename, ... )
         end
     })
 
-    for path in string.gmatch(package.path, "[^;]+") do
-        path = string.gsub(path, "%?%.lua","ik/sandbox_loader.lua")
-        if fs.exists(path) then
-            task.create(path,loader.reader,loader.writer,modulename, ...)
-        end
-    end
+    local path = fs.parent_path(string.sub(debug.getinfo(1,"lS").source,2))
 
+    path = fs.path(path,"sandbox_loader.lua")
+
+    task.create(path,loader.reader,loader.writer,modulename, ...)
+    
     return loader
 end
