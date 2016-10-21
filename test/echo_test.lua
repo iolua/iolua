@@ -9,7 +9,7 @@ local duo_two = {
 }
 
 
-local logger = log.open("console")
+--local logger = log.open("console")
 task.create("echo_echo.lua",duo_one,n)
 task.create("echo_echo.lua",duo_two,n)
 for v = 1,n * 2,1 do

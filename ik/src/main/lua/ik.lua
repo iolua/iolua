@@ -1,10 +1,10 @@
 log.console("","console","iolua")
 local console = log.open("console")
 
-local homepath = os.getenv('IK_HOME')
+local homepath = os.getenv('IOLUA_HOME')
 
 if homepath == nil then
-    console:error("env variable IK_HOME not set")
+    console:error("env variable IOLUA_HOME not set")
     return
 end
 

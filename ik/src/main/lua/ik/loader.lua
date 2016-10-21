@@ -90,4 +90,9 @@ function module:load(path)
     return not self.external
 end
 
+
+function module:get()
+
+end
+
 return module

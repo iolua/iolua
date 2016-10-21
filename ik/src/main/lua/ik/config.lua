@@ -2,10 +2,10 @@ local logger = log.open("ik")
 
 local module = {}
 
-module.homepath = os.getenv('IK_HOME')
+module.homepath = os.getenv('IOLUA_HOME')
 
 if module.homepath == nil then
-    error("env variable IK_HOME not set")
+    error("env variable IOLUA_HOME not set")
 end
 
 module.current_dir = fs.current_path()

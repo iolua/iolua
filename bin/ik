@@ -1,5 +1,5 @@
 #!/bin/sh
 
-export LUA_PATH=$IK_HOME/src/main/lua/?.lua
+export LUA_PATH=$IOLUA_HOME/ik/src/main/lua/?.lua
 
-iolua $IK_HOME/src/main/lua/ik.lua $*
+iolua $IOLUA_HOME/ik/src/main/lua/ik.lua $*
