@@ -8,6 +8,8 @@ local module = require(modulename)
 
 local obj = module.ctor(table.unpack(table.pack(...),4))
 
+setmetatable(obj, { __index = module })
+
 while true do
 
     local args = table.pack(pcall(chan.recv,reader))

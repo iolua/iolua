@@ -4,7 +4,7 @@ local module    = {}
 
 function module.ctor()
     return {
-        external = true, properties = {}, plugins = {}
+        loaded = false,external = true, properties = {}, plugins = {}, tasks = {}
     }
 end
 
@@ -15,7 +15,11 @@ function module:load(path)
         self.external = false
 
         -- create package.lua execute env
-        local env = {}
+        local env = { }
+
+        for k,v in pairs(_G) do
+            env[k] = v
+        end
 
         env.name = function(name)
             self.Name = name
@@ -75,6 +79,35 @@ function module:load(path)
             end
         })
 
+        env.task = {}
+
+        setmetatable(env.task, {
+            __newindex = function(_,name,val)
+                local task = self.tasks[name]
+
+                if task then
+                    error("%s\n\tduplicate task name, see other defined at lines(%d)",packagefile, task.lines)
+                end
+
+                task = {
+                    F = val,
+                    lines = debug.getinfo(2,"lS").currentline
+                }
+
+                self.tasks[name] = task
+            end,
+
+            __index = function(_,name)  
+                local task = self.tasks[name]
+
+                if not task then
+                    error("%s(%d)\n\t reference undefined task '%s'",packagefile, debug.getinfo(2,"lS").currentline, name)
+                end
+
+                return task
+            end
+        })
+
         local block,err = loadfile(packagefile,"t",env)
 
         if not block then
@@ -92,7 +125,12 @@ end
 
 -- run package task with args
 function module:run(path, task, ...)
-    self:load()
+    
+    if not self.loaded then self:load(path) end
+
+    local runner = require "ik.runner"
+
+    runner(self, task, ...)
 end
 
 return module

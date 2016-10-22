@@ -27,7 +27,15 @@ cli:set_name('ik')
 cli
     :command('get')
     :action(function(options)
-        cmd.get(homepath,options)
+        cmd.get(table.unpack(options))
+    end)
+
+cli
+    :command('run','Run ik task')
+    :argument('task', 'The task name')
+    :splat('args', 'Input args',nil, 99)
+    :action(function(options)
+        cmd.run(options.task,table.unpack(options.args))
     end)
 
 local args, err = cli:parse(table.pack(...))

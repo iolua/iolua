@@ -13,7 +13,8 @@ end
 
 function module.run(...)
     local rootloader = sandbox("ik.loader")
-    rootloader:run(...)
+    
+    rootloader:run(config.current_dir, ...)
 end
 
 return module
