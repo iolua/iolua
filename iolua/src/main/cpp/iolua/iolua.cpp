@@ -9,6 +9,7 @@
 #include <iolua/libpipe.hpp>
 #include <iolua/libexec.hpp>
 #include <iolua/libfs.hpp>
+#include <sqlite/lsqlite3.h>
 namespace iolua {
 
     static auto& logger = lemon::log::get("iolua_dispatcher");
@@ -203,6 +204,7 @@ namespace iolua {
         iolua_openpipe(t);
         iolua_open_exec(t);
         iolua_open_fs(t);
+        luaopen_lsqlite3(t->L());
     }
 
     bool iolua_State::wake_up(std::uint32_t task_id)

@@ -90,9 +90,9 @@ function module:load(path)
     return not self.external
 end
 
-
-function module:get()
-
+-- run package task with args
+function module:run(path, task, ...)
+    self:load()
 end
 
 return module
