@@ -18,6 +18,9 @@ logger:info("start iolua make system ...")
 
 local cli = require('cliargs')
 local cmd = require('ik.cmd')
+local config  = require "ik.config"
+
+
 
 
 
@@ -26,7 +29,7 @@ cli:set_name('ik')
 cli
     :command('get')
     :action(function(options)
-        cmd.get(table.unpack(options))
+        cmd.get(config.current_dir, table.unpack(options))
     end)
 
 cli
@@ -34,7 +37,7 @@ cli
     :argument('task', 'The task name')
     :splat('args', 'Input args',nil, 99)
     :action(function(options)
-        cmd.run(options.task,table.unpack(options.args))
+        cmd.run(config.current_dir, options.task,table.unpack(options.args))
     end)
 
 local args, err = cli:parse(table.pack(...))

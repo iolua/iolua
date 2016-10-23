@@ -1,4 +1,5 @@
 local console   = log.open("console")
+local sandbox   = require "ik.sandbox"
 local module    = {}
 
 local split_url = function(url)
@@ -21,6 +22,7 @@ end
 
 function module:load(path)
     local packagefile = fs.path(path,"package.lua")
+    self.path = path
 
     if fs.exists(packagefile) then
         self.external = false
@@ -60,16 +62,21 @@ function module:load(path)
 
             setmetatable(plugin, {
                 __index = {
-                    localpath = function(_,path)
-                        plugin.localpath = path
+                    url = function(_,path)
+                        plugin.__url = path
+
+                        return plugin
                     end,
 
                     sync = function(_, sync)
                         local name, version = split_url(sync)
-                        plugin.sync = {
+
+                        plugin.__sync = {
                             name    = name,
                             version = version
                         }
+
+                        return plugin
                     end
                 }
             })
@@ -136,8 +143,15 @@ function module:load(path)
         block()
     end
 
-    console:info( "load package     : %s", path)
-    console:debug("external package : %s", self.external)
+    console:info( "/* ")
+    console:info( "/* package: %s", path)
+    console:info( "/* external package: %s", self.external)
+
+    for name in pairs(self.plugins) do
+        console:info( "/* plugin: %s", name)
+    end
+
+    console:info( "/* ")
 
     return not self.external
 end
@@ -148,7 +162,18 @@ function module:setup()
     local plugins = {}
 
     for name,plugin in pairs(self.plugins) do
-        plugins[name] = require("ik.plugin")(plugin)
+
+        local rootloader = sandbox("ik.plugin", {
+            name        = plugin.name,
+            version     = plugin.version,
+            sync        = plugin.__sync,
+            url         = plugin.__url,
+            load_dir    = self.path,
+        })
+
+        rootloader:setup()
+
+        plugins[name] = rootloader
     end
 
     self.plugins = plugins

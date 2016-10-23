@@ -5,7 +5,7 @@ return function ( modulename, ... )
     }
 
     setmetatable(loader, {
-        __index = function(self,name)
+        __index = function(_,name)
             return function(self, ...)
                 chan.send(self.writer, name, ...)
                 local retargs = table.pack(chan.recv(self.reader))
