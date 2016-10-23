@@ -1,4 +1,4 @@
-if(WIN32)
+if(MSVC)
     add_definitions(/DLEMOON_BUILD /wd4311 /D_UNICODE)
 elseif(APPLE)
     add_definitions(-D_BSD_SOURCE)
