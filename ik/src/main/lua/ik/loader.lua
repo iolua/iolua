@@ -29,6 +29,27 @@ function module:load(path)
             self.Version = version
         end
 
+        -- create sync DSL
+
+        env.sync = function(name)
+            local sync = { name = name}
+
+            setmetatable(sync, {
+                __index = {
+                    version = function(_, version)
+                        sync.version = version
+                    end,   
+                }
+            })
+
+            self.sync = sync
+
+            return function()
+            end
+        end
+
+
+        -- create plugin DSL 
         env.plugin =  function(name)
 
             local plugin = self.plugins[name]
@@ -49,8 +70,8 @@ function module:load(path)
                         plugin.localpath = path
                     end,
 
-                    git = function(_, path)
-                        plugin.url = path
+                    version = function(_, version)
+                        plugin.version = version
                     end
                 }
             })
