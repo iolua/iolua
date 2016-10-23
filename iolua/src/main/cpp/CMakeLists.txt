@@ -4,7 +4,7 @@ if(WIN32)
 elseif(APPLE)
     add_definitions(-D_BSD_SOURCE)
 else()
-    add_definitions(-D_POSIX_SOURCE -DLUA_USE_LINUX)
+    add_definitions(-DLUA_USE_LINUX)
 endif()
 
 
@@ -20,8 +20,9 @@ file(GLOB_RECURSE header_files
 
 add_library(libiolua STATIC ${header_files} ${src_files})
 
-
 target_link_libraries(libiolua lemon)
+
+
 
 foreach(FILE ${header_files})
     get_filename_component(FILE_NAME ${FILE} NAME)

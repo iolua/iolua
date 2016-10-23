@@ -10,8 +10,8 @@
 namespace lemon{ namespace log{
 
 	// log level enum
-	enum class level {
-		error = 1, warn = 2, info = 4, debug = 8, trace = 16, verbose = 32,all = 63
+    enum class level {
+        error = 1, warn = 2, info = 4, debug = 8, trace = 16, verbose = 32,all = 63
 	};
 
 	class sink;

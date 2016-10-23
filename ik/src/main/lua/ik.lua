@@ -8,7 +8,6 @@ if homepath == nil then
     return
 end
 
-
 log.file(homepath .. "/log","ik",true,"ik")
 
 

@@ -205,6 +205,8 @@ namespace iolua {
         iolua_open_exec(t);
         iolua_open_fs(t);
         luaopen_lsqlite3(t->L());
+
+        lua_setglobal(t->L(),"sqlite3");
     }
 
     bool iolua_State::wake_up(std::uint32_t task_id)

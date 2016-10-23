@@ -13,6 +13,7 @@ namespace iolua {
         luaL_openlibs(L);
 
         int err = luaL_loadfile(L, (const char *)lua_touserdata(L, 1));
+
         if (err != LUA_OK)
             lua_error(L);
         return 1;

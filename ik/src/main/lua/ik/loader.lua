@@ -1,12 +1,23 @@
-local config    = require "ik.config"
 local console   = log.open("console")
 local module    = {}
+
+local split_url = function(url)
+
+    local result = {}
+
+    for w in string.gmatch(url,"[^:]+") do
+        table.insert(result,w)
+    end
+
+    return table.unpack(result)
+end
 
 function module.ctor()
     return {
         loaded = false,external = true, properties = {}, plugins = {}, tasks = {}
     }
 end
+
 
 function module:load(path)
     local packagefile = fs.path(path,"package.lua")
@@ -29,28 +40,10 @@ function module:load(path)
             self.Version = version
         end
 
-        -- create sync DSL
-
-        env.sync = function(name)
-            local sync = { name = name}
-
-            setmetatable(sync, {
-                __index = {
-                    version = function(_, version)
-                        sync.version = version
-                    end,   
-                }
-            })
-
-            self.sync = sync
-
-            return function()
-            end
-        end
-
-
         -- create plugin DSL 
-        env.plugin =  function(name)
+        env.plugin =  function(url)
+
+            local name, version = split_url(url)
 
             local plugin = self.plugins[name]
 
@@ -60,8 +53,9 @@ function module:load(path)
 
 
             plugin = {
-                name = name ,
-                lines = debug.getinfo(2,"lS").currentline
+                name    = name ,
+                version = version,
+                lines   = debug.getinfo(2,"lS").currentline
             }
 
             setmetatable(plugin, {
@@ -70,8 +64,12 @@ function module:load(path)
                         plugin.localpath = path
                     end,
 
-                    version = function(_, version)
-                        plugin.version = version
+                    sync = function(_, sync)
+                        local name, version = split_url(sync)
+                        plugin.sync = {
+                            name    = name,
+                            version = version
+                        }
                     end
                 }
             })
@@ -144,10 +142,25 @@ function module:load(path)
     return not self.external
 end
 
+-- call plugin setup
+function module:setup()
+
+    local plugins = {}
+
+    for name,plugin in pairs(self.plugins) do
+        plugins[name] = require("ik.plugin")(plugin)
+    end
+
+    self.plugins = plugins
+end
+
 -- run package task with args
 function module:run(path, task, ...)
     
-    if not self.loaded then self:load(path) end
+    if not self.loaded then
+        self:load(path)
+        self:setup()
+    end
 
     local runner = require "ik.runner"
 

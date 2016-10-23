@@ -17,9 +17,11 @@ if(WIN32)
 endif()
 
 if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g3")
-    message(${CMAKE_CXX_FLAGS})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
+    foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+        set(${flag_var} "${${flag_var}} -std=c++11 -g3")
+        message(${${flag_var}})
+    endforeach(flag_var)
+
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/lemon/src/main/cpp)
@@ -27,3 +29,4 @@ include_directories(${CMAKE_SOURCE_DIR}/iolua/src/main/cpp)
 
 add_subdirectory(lemon)
 add_subdirectory(iolua)
+

@@ -8,12 +8,8 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp)
 
-message(${CMAKE_CXX_FLAGS})
-
 add_subdirectory(src/main/cpp)
 add_subdirectory(src/test/cpp)
-
-message(${CMAKE_CXX_FLAGS})
 
 add_executable(iolua main.cpp )
 

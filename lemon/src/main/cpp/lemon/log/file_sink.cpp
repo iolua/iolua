@@ -104,22 +104,22 @@ namespace lemon{ namespace log{
 
 		switch (msg.LEVEL)
 		{
-			case level::error:
+            case lemon::log::level::error:
 				level = "error";
 				break;
-			case level::warn:
+			case lemon::log::level::warn:
 				level = "warn";
 				break;
-			case level::info:
+			case lemon::log::level::info:
 				level = "info";
 				break;
-			case level::debug:
+			case lemon::log::level::debug:
 				level = "debug";
 				break;
-			case level::trace:
+			case lemon::log::level::trace:
 				level = "trace";
 				break;
-			case level::verbose:
+			case lemon::log::level::verbose:
 			default:
 				level = "verbose";
 				break;

@@ -15,6 +15,8 @@ int main(int args, char** argv) {
 
     std::vector<std::string> argList;
 
+//    lemon::log::add_sink(std::unique_ptr<lemon::log::sink>(new lemon::log::console()));
+
     for( int i = 2; i < args; i ++ ) {
         argList.push_back(argv[i]);
     }
