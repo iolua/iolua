@@ -55,7 +55,7 @@ function module:load(path)
             local plugin = self.plugins[name]
 
             if plugin then
-                    error("%s\n\tduplicate plugin name, see other defined at lines(%d)",packagefile, plugin.lines)
+                    error(string.format("%s\n\tduplicate plugin name, see other defined at lines(%d)",packagefile, plugin.lines))
             end
 
 
