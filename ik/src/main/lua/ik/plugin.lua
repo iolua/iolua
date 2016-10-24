@@ -14,6 +14,8 @@ function module:setup()
 
     local filepath = fs.path(path, "src/main/plugin/plugin.lua")
 
+    self.filepath = filepath
+
     package.path = package.path .. ";" .. fs.path(path,"src/main/plugin/?.lua")
 
     local env = {}
@@ -58,6 +60,31 @@ function module:setup()
     end
 
     block()
+end
+
+
+function module:tasks()
+    local tasks = {}
+
+    for name,task in pairs(self.tasks) do
+        tasks[name] = {
+            lines       = task.lines,
+            filepath    = self.filepath,
+            prev        = task.prev
+        }
+    end
+
+    return tasks
+end
+
+function module:run(name, ...)
+    local task = self.tasks[name]
+
+    if task == nil then
+        error(string.format("unknown task %s for plugin %s",name,self.name))
+    end
+
+    task.F(task,...)
 end
 
 

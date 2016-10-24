@@ -1,6 +1,6 @@
 local logger = log.open("ik")
 
-local topSort = nil
+local topSort
 
 topSort = function(self,taskGroup)
     
@@ -39,7 +39,7 @@ topSort = function(self,taskGroup)
             local prev = self.taskGroups[task.prev]
 
             if prev == nil then
-                error(string.format("unknown task :%s", task.prev))
+                error(string.format("\n\t%s(%d) : dependency task '%s' not found !!!!", task.filepath,task.lines, task.prev))
             end
 
             local childSortGroups = topSort(self, prev)
@@ -72,11 +72,33 @@ local function run( ctx, task, ...)
     
     for name,task in pairs(ctx.tasks or {}) do
         if taskGroups[name] == nil then
-            taskGroups[name] = {Name = name, task}
+            taskGroups[name] = { name = name, task}
         else
             table.insert(taskGroups[name],task)
         end
-    end    
+    end
+
+    for _, plugin in pairs(ctx.plugins) do
+        for name, taskinfo in pairs(plugin:tasks()) do
+            local task = {
+                F           =   function(_,...)
+                                    plugin:run(name, ...)
+                                end,
+
+                prev        = taskinfo.prev,
+
+                lines       = taskinfo.lines,
+
+                filepath    = taskinfo.filepath,
+            }
+
+            if taskGroups[name] == nil then
+                taskGroups[name] = {name = name, task}
+            else
+                table.insert(taskGroups[name],task)
+            end
+        end
+    end
     
     
     local taskGroup = taskGroups[task]                                        

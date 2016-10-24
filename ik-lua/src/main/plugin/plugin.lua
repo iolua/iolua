@@ -8,5 +8,10 @@
 
 require "ik.lua.test"
 
+task.resources = function()
+    print("hello i'am resources and say hi from ik-lua plugin")
+end
+
 task.test = function()
+    print("hello i'am from ik-lua plugin")
 end

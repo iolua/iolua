@@ -15,7 +15,6 @@ function module.sync(ctx)
         return ctx.url:gsub("%${root}", ctx.load_dir)
     end
 
-    console:info("[%s] %s,   %s,     %s,     %s",task.id(), name,version,url,sync)
 end
 
 return module

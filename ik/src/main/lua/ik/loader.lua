@@ -116,8 +116,9 @@ function module:load(path)
                 end
 
                 task = {
-                    F = val,
-                    lines = debug.getinfo(2,"lS").currentline
+                    F           = val,
+                    filepath    = packagefile,
+                    lines       = debug.getinfo(2,"lS").currentline
                 }
 
                 self.tasks[name] = task
