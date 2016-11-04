@@ -22,7 +22,7 @@ namespace lemon{
         class  reactor_io_service_kqueue final : public reactor_io_service
         {
         public:
-            reactor_io_service_kqueue()
+            reactor_io_service_kqueue():_logger(log::get("io_service"))
             {
 
                 _handler = kqueue();
@@ -56,8 +56,8 @@ namespace lemon{
             void register_io_service(handler fd, std::error_code & ec) final
             {
                 struct kevent changes[2];
-                EV_SET(&changes[0], fd, EVFILT_READ, EV_ADD|EV_CLEAR|EV_EOF, 0, 0, NULL);
-                EV_SET(&changes[1], fd, EVFILT_WRITE, EV_ADD|EV_CLEAR|EV_EOF, 0, 0, NULL);
+                EV_SET(&changes[0], fd, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR , 0, 0, NULL);
+                EV_SET(&changes[1], fd, EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_CLEAR , 0, 0, NULL);
                 int ret = kevent(_handler, changes, sizeof(changes)/sizeof(struct kevent), NULL, 0, NULL);
 
                 if(ret == -1)
@@ -89,7 +89,8 @@ namespace lemon{
 
                 for(;;)
                 {
-                    int ret = kevent(_handler,NULL, 0, &k_events[0], (int)k_events.size(), &spec);
+
+                    int ret = kevent(_handler,NULL,0, &k_events[0], (int)k_events.size(), &spec);
 
                     if(ret == -1)
                     {
@@ -103,19 +104,23 @@ namespace lemon{
 
                     for ( int i = 0; i < ret; i ++ )
                     {
-                        if((k_events[i].filter & EVFILT_READ)!=0)
+                        lemonD(_logger,"fd(%d) filter %d",k_events[i].ident, k_events[i].filter)
+
+                        if ((k_events[i].flags & EV_EOF) == EV_EOF)
+                        {
+                            lemonD(_logger,"fd(%d) EOF",k_events[i].ident)
+                        }
+
+                        if( k_events[i].filter == EVFILT_READ)
                         {
                             events[i].ops |= (int)io_event_op::read;
+
+                            events[i].fd = k_events[i].ident;
                         }
-
-
-                        if((k_events[i].filter & EVFILT_WRITE)!=0)
+                        else if( k_events[i].filter == EVFILT_WRITE)
                         {
                             events[i].ops |= (int)io_event_op::write;
-                        }
 
-                        if(events[i].ops != (int)io_event_op::none)
-                        {
                             events[i].fd = k_events[i].ident;
                         }
                     }
@@ -127,6 +132,7 @@ namespace lemon{
 
         private:
             int                             _handler;
+            const lemon::log::logger        &_logger;
         };
 
         typedef  reactor_io_service_kqueue io_service;

@@ -10,10 +10,12 @@
 
 #include <functional>
 
+#include <lemon/log/log.hpp>
 #include <lemon/io/buff.hpp>
 #include <lemon/io/reactor_op.hpp>
 #include <lemon/io/reactor_io_object.hpp>
 #include <lemon/io/reactor_io_service.hpp>
+
 
 namespace lemon{
     namespace io{
@@ -30,6 +32,7 @@ namespace lemon{
                     ,_buff(buff)
                     ,_callback((callback))
                     ,_trans(0)
+                    ,_logger(lemon::log::get("io_service"))
             {
                
             }
@@ -44,6 +47,7 @@ namespace lemon{
                 {
                     if(errno == EAGAIN || errno == EWOULDBLOCK)
                     {
+                        lemonD(op->_logger,"fd(%d) read pending ...", op->_fd);
                         return false;
                     }
 
@@ -54,10 +58,13 @@ namespace lemon{
                         length ++;
                     }
 
-                    return true;
+                    lemonD(op->_logger,"fd(%d) read error",op->_fd);
                 }
 
+
                 op->_trans = (size_t)length;
+
+                lemonD(op->_logger,"fd(%d) read length(%d)",op->_fd,length);
 
                 return true;
             }
@@ -68,11 +75,12 @@ namespace lemon{
             }
 
         private:
-            int                     _fd;
-            buffer                  _buff;
-            Callback                _callback;
-            size_t                  _trans;
-            std::error_code         _ec;
+            int                             _fd;
+            buffer                          _buff;
+            Callback                        _callback;
+            size_t                          _trans;
+            std::error_code                 _ec;
+            const lemon::log::logger        &_logger;
         };
 
 

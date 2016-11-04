@@ -138,6 +138,11 @@ namespace lemon{ namespace fs{
                 }
             }
 
+            if(!_nodes.empty() && _nodes.back() == string_type(1,'.'))
+            {
+                _nodes.pop_back();
+            }
+
             _nodes.insert(_nodes.end(),rhs._nodes.begin(),rhs._nodes.end());
 
             return *this;

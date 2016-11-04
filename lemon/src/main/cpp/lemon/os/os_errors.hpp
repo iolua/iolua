@@ -7,7 +7,7 @@
 namespace lemon{ namespace os{
         enum class errc
         {
-            command_not_found,exec_already_started
+            command_not_found = 1,exec_already_started
         };
 
         class os_error_category : public std::error_category

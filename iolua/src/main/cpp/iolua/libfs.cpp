@@ -39,7 +39,7 @@ namespace iolua {
     {
         std::error_code ec;
 
-        lemon::fs::create_directory(luaL_checkstring(L,1),ec);
+        lemon::fs::create_directories(luaL_checkstring(L,1),ec);
 
         if(ec)
         {
@@ -168,11 +168,18 @@ namespace iolua {
         return 1;
     }
 
-    static int fs_remove_file(lua_State* L)
+    static int fs_remove(lua_State* L)
     {
         std::error_code ec;
 
-        lemon::fs::remove_file(luaL_checkstring(L,1), ec);
+        if(lemon::fs::is_directory(luaL_checkstring(L,1)))
+        {
+            lemon::fs::remove_directories(luaL_checkstring(L,1), ec);
+        }
+        else
+        {
+            lemon::fs::remove_file(luaL_checkstring(L,1), ec);
+        }
 
         if(ec)
         {
@@ -267,7 +274,7 @@ namespace iolua {
             { "create_directory", fs_create_directory },
             { "symlink", fs_create_symlink },
             { "is_directory", fs_is_directory },
-            { "remove_file", fs_remove_file },
+            { "remove", fs_remove },
             { "copy_file", fs_copy_file },
             { "file_size", fs_file_size },
             { "file_type", fs_file_type },

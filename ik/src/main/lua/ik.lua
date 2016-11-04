@@ -1,4 +1,4 @@
-log.console("","console","iolua")
+log.console("","console","iolua","io_service")
 local console = log.open("console")
 
 local homepath = os.getenv('IOLUA_HOME')
@@ -8,7 +8,7 @@ if homepath == nil then
     return
 end
 
-log.file(homepath .. "/log","ik",true,"ik")
+log.file(homepath .. "/log","ik",true,"ik","iolua")
 
 
 local logger = log.open("ik")

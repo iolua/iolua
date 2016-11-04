@@ -105,9 +105,9 @@ function module:load(path)
             end
         })
 
-        env.task = {}
+        env.job = {}
 
-        setmetatable(env.task, {
+        setmetatable(env.job, {
             __newindex = function(_,name,val)
                 local task = self.tasks[name]
 
@@ -154,6 +154,8 @@ function module:load(path)
 
     console:info( "/* ")
 
+    self.loaded = true
+
     return not self.external
 end
 
@@ -164,15 +166,15 @@ function module:setup()
 
     for name,plugin in pairs(self.plugins) do
 
-        local rootloader = sandbox("ik.plugin", {
+        local rootloader = sandbox("ik.plugin")
+
+        rootloader:loadfrom( {
             name        = plugin.name,
             version     = plugin.version,
             sync        = plugin.__sync,
             url         = plugin.__url,
             load_dir    = self.path,
         })
-
-        rootloader:setup()
 
         plugins[name] = rootloader
     end
@@ -191,6 +193,17 @@ function module:run(path, task, ...)
     local runner = require "ik.runner"
 
     runner(self, task, ...)
+end
+
+-- get package info
+function module:info(path)
+    if not self.loaded then self:load(path) end
+
+    return {
+        name    = self.name,
+        version = self.version,
+        path    = self.path,
+    }
 end
 
 return module

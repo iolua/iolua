@@ -149,10 +149,15 @@ namespace lemon{
 
                 obj->push_read_op(op);
 
+                lemonD(_logger,"invoke io_read(%d)",obj->get());
+
                 if(invoke_io_op(obj,io_event_op::read))
                 {
+                    lemonD(_logger,"invoke io_read(%d) -- success",obj->get());
                     _condition.notify_one();
                 }
+
+                lemonD(_logger,"invoke io_read(%d) -- wait",obj->get());
             }
 
             void push_write_op(reactor_io_object* obj, reactor_op* op, std::error_code & ec)
@@ -213,16 +218,72 @@ namespace lemon{
                 return false;
             }
 
+            void invoke_all_io_op(reactor_io_object * obj)
+            {
+                size_t completes = 0;
+                for(;;)
+                {
+                    reactor_op* op = obj->front_read_op();
+
+                    if(!op) break;
+
+                    if(op->action())
+                    {
+                        completes ++;
+                        if(_complete_header == nullptr)
+                        {
+                            _complete_tail = _complete_header = op;
+                        }
+                        else
+                        {
+                            _complete_tail->next = op;
+                            _complete_tail = op;
+                        }
+                    }
+
+                    obj->pop_read_op();
+                }
+
+                for(;;)
+                {
+                    reactor_op* op = obj->front_write_op();
+
+                    if(!op) break;
+
+                    if(op->action())
+                    {
+                        completes ++;
+
+                        if(_complete_header == nullptr)
+                        {
+                            _complete_tail = _complete_header = op;
+                        }
+                        else
+                        {
+                            _complete_tail->next = op;
+                            _complete_tail = op;
+                        }
+                    }
+
+                    obj->pop_write_op();
+                }
+
+                for(size_t i = 0; i < completes; i ++ )
+                {
+                    _condition.notify_one();
+                }
+            }
+
             void process() noexcept
             {
                 const static size_t max_events = 256;
                 io_event events[max_events];
                 std::size_t raised;
 
-                lemonD(_logger,"reactor_io_service process ...")
-
                 while((raised = io_events_wait(events,max_events)) != 0)
                 {
+                    lemonD(_logger,"reactor_io_service process(%d) ...", raised)
+
                     std::unique_lock<std::mutex> lock(_mutex);
 
                     size_t completes = 0;
@@ -233,47 +294,47 @@ namespace lemon{
 
                         if(iter != _handlers.end())
                         {
-                            lemonD(_logger,"fd(%d) events :%d", events[i].fd,events[i].ops);
-
                             if(events[i].ops & (int)io_event_op::read)
                             {
-                                lemonD(_logger,"fd(%d) read", events[i].fd);
+                                lemonD(_logger,"fd(%d) async invoke io_event_read", events[i].fd);
 
                                 if(invoke_io_op(iter->second,io_event_op::read))
                                 {
+                                    lemonD(_logger,"fd(%d) async invoke io_event_read -- success", events[i].fd);
                                     completes++;
                                 }
                                 else
                                 {
-                                    lemonW(_logger,"fd(%d) read : do nothing", events[i].fd);
+                                    lemonD(_logger,"fd(%d) async invoke io_event_read -- wait", events[i].fd);
                                 }
                             }
 
                             if(events[i].ops & (int)io_event_op::write)
                             {
-                                lemonD(_logger,"fd(%d) write", events[i].fd);
+                                lemonD(_logger,"fd(%d) async invoke io_event_write", events[i].fd);
                                 if(invoke_io_op(iter->second,io_event_op::write))
                                 {
+                                    lemonD(_logger,"fd(%d) async invoke io_event_write -- success", events[i].fd);
                                     completes++;
                                 }
                                 else
                                 {
-                                    lemonW(_logger,"fd(%d) write : do nothing", events[i].fd);
+                                    lemonD(_logger,"fd(%d) async invoke io_event_write -- wait", events[i].fd);
                                 }
                             }
                         }
                         else
                         {
-                            lemonW(_logger,"reactor_io_service un-register fd(%d) event raised", events[i].fd);
+                            lemonW(_logger,"reactor_io_service un-register fd(%d) event raised(%d)", events[i].fd,events[i].ops);
                         }
                     }
-
-                    lemonD(_logger,"reactor_io_service process completes(%d)",completes);
 
                     for(size_t i = 0; i < completes; i ++ )
                     {
                         _condition.notify_one();
                     }
+
+                    lemonD(_logger,"reactor_io_service process completes(%d)",completes);
                 }
 
                 lemonD(_logger,"reactor_io_service process -- exit")
@@ -331,6 +392,8 @@ namespace lemon{
             std::lock_guard<std::mutex> lock(service._mutex);
 
             service._handlers.erase(obj->get());
+
+            service.invoke_all_io_op(obj);
         }
 
     }

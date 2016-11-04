@@ -142,7 +142,12 @@ namespace iolua {
     {
         task * tk = (task*)lua_touserdata(L, lua_upvalueindex(1));
 
-        tk->context()->close_io_object((uint32_t) luaL_checkinteger(L, 1));
+        int N = lua_gettop(L);
+
+        for(int i = 1; i <= N; i ++)
+        {
+            tk->context()->close_io_object((uint32_t) luaL_checkinteger(L, i));
+        }
 
         return 0;
     }

@@ -91,6 +91,15 @@ namespace iolua {
         return counter;
     }
 
+    static int lexec_work_dir(lua_State *L)
+    {
+        auto exec = (lemon::os::exec*)luaL_checkudata(L, 1, "iolua_exec");
+
+        exec->work_path(luaL_checkstring(L,2));
+
+        return 0;
+    }
+
     static luaL_Reg exec_funcs[] = {
 
             { "wait", lexec_wait },
@@ -98,6 +107,8 @@ namespace iolua {
             { "start", lexec_start },
 
             { "pipe", lexec_pipe },
+
+            { "workdir" , lexec_work_dir},
 
             { NULL, NULL }
     };
@@ -171,8 +182,25 @@ namespace iolua {
         return 1;
     }
 
+    static int lexec_lookup(lua_State *L)
+    {
+        auto result = lemon::os::lookup(luaL_checkstring(L,1));
+
+        if (std::get<1>(result))
+        {
+            lua_pushboolean(L,1);
+        }
+        else
+        {
+            lua_pushboolean(L,0);
+        }
+
+        return 1;
+    }
+
     static luaL_Reg funcs[] = {
             { "create", lexec_create },
+            { "lookup", lexec_lookup },
             { NULL, NULL }
     };
 

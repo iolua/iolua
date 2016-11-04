@@ -1,8 +1,7 @@
-local console = log.open("console")
+--local console = log.open("console")
 
 
 local writer,reader,modulename = ...
-local module = {}
 
 local module = require(modulename)
 

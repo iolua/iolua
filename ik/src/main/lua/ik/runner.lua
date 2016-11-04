@@ -82,7 +82,7 @@ local function run( ctx, task, ...)
         for name, taskinfo in pairs(plugin:tasks()) do
             local task = {
                 F           =   function(_,...)
-                                    plugin:run(name, ...)
+                                    return plugin:run(name, ...)
                                 end,
 
                 prev        = taskinfo.prev,

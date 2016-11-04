@@ -53,7 +53,7 @@ namespace lemon{ namespace os{
         process(const std::string & path,io::handler in,io::handler out,io::handler err)
                 :_path(path)
                 ,_workpath(fs::current_path())
-                ,_logger(lemon::log::get("process"))
+                ,_logger(lemon::log::get("console"))
                 ,_stdin(in)
                 ,_stdout(out)
                 ,_stderr(err)
@@ -134,7 +134,16 @@ namespace lemon{ namespace os{
 
         void exec(std::error_code & err,const std::vector<std::string> & buff)
         {
-            fs::current_path(_workpath);
+            std::error_code ec;
+
+            fs::current_path(_workpath,ec);
+
+            if(ec)
+            {
+                printf("set work path error:\n\tpath:%s\n\terror:%s\n", _workpath.generic_string().c_str(),ec.message().c_str());
+
+                exit(1);
+            }
 
             // redirect stdin/stdout/stderr
 

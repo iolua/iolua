@@ -1,17 +1,20 @@
-local cached = require "ik.cached"
-local module = {}
+local cached    = require "ik.cached"
+local console   = log.open("console")
+local module    = {}
 
-function module.ctor(ctx)
-    ctx.tasks = {}
-    return ctx
+function module.ctor()
+    local obj = { tasks = {} }
+    return obj
 end
 
-function module:setup()
+function module:loadfrom(ctx)
     -- sync plugin package into locale cached directory
-    local path = cached.sync(self)
+    local path = cached.sync(ctx)
 
-    -- load local cached plugin package
+    self:load(path)
+end
 
+function module:load(path)
     local filepath = fs.path(path, "src/main/plugin/plugin.lua")
 
     self.filepath = filepath
@@ -24,14 +27,14 @@ function module:setup()
         env[k] = v
     end
 
-    env.task = {}
+    env.job = {}
 
-    setmetatable(env.task, {
+    setmetatable(env.job, {
         __newindex = function(_,name,val)
             local task = self.tasks[name]
 
             if task then
-                error("%s\n\tduplicate task name, see other defined at lines(%d)",packagefile, task.lines)
+                error(string.format("%s\n\tduplicate task name, see other defined at lines(%d)",filepath, task.lines))
             end
 
             task = {
@@ -46,7 +49,7 @@ function module:setup()
             local task = self.tasks[name]
 
             if not task then
-                error("%s(%d)\n\t reference undefined task '%s'",packagefile, debug.getinfo(2,"lS").currentline, name)
+                error(string.format("%s(%d)\n\t reference undefined task '%s'",filepath, debug.getinfo(2,"lS").currentline, name))
             end
 
             return task
@@ -84,7 +87,7 @@ function module:run(name, ...)
         error(string.format("unknown task %s for plugin %s",name,self.name))
     end
 
-    task.F(task,...)
+    return task.F(task,...)
 end
 
 

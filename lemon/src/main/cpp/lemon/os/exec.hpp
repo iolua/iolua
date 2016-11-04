@@ -68,7 +68,7 @@ namespace lemon {
 			}
 
 			exec(lemon::io::io_service& service, const std::string & name, int options)
-                :_service(service),_name(name),_options(options)
+                :_service(service),_name(name),_options(options),_workpath(lemon::fs::current_path())
 			{
 
 			}
@@ -83,14 +83,7 @@ namespace lemon {
 
 			void work_path(const fs::filepath & path)
 			{
-				std::error_code err;
-
-				process_work_path(*_impl, path, err);
-
-				if (err)
-				{
-					throw std::system_error(err);
-				}
+				_workpath = path;
 			}
 
 			template <typename ...Args>
@@ -118,6 +111,10 @@ namespace lemon {
 					throw std::system_error(err);
 				}
 
+                _in->close_out();
+
+                _waitable = true;
+
 				_wait_thread = std::thread([&]{
 
 					std::error_code ec;
@@ -129,19 +126,19 @@ namespace lemon {
 
 					_exit_code = result;
 
+                    _waitable = false;
+
 					if(_wait)
 					{
 						_wait(_exit_code,_ec);
 					}
-
-					_impl.reset();
 				});
 
-				if (_in) _in->close_in();
+				if(_in)_in->close_in();
 
-				if (_out) _out->close_out();
+                if(_out) _out->close_out();
 
-				if (_err) _err->close_out();
+                if(_err) _err->close_out();
 			}
 
 
@@ -189,7 +186,7 @@ namespace lemon {
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
 
-				if(!_wait_thread.joinable())
+				if(!_waitable)
 				{
 					callback(_exit_code,_ec);
 				}
@@ -220,7 +217,7 @@ namespace lemon {
 
                 if (!std::get<1>(found))
                 {
-                    throw std::system_error((int)errc::command_not_found, os_error_category());
+                    throw std::system_error(make_error_code(errc::command_not_found),_name);
                 }
 
                 if ((_options & (int)exec_options::pipe_in))
@@ -243,12 +240,23 @@ namespace lemon {
                         _in ? _in->in().get() : io::handler(),
                         _out ? _out->out().get() : io::handler(),
                         _err ? _err->out().get() : io::handler()));
+
+
+				std::error_code err;
+
+				process_work_path(*_impl, _workpath, err);
+
+				if (err)
+				{
+					throw std::system_error(err);
+				}
             }
 
 		private:
 			std::unique_ptr<process>								_impl;
 			std::mutex												_mutex;
 			std::thread												_wait_thread;
+            bool                                                    _waitable;
 			std::error_code 										_ec;
 			int 													_exit_code;
 			std::unique_ptr<io::pipe>								_in;
@@ -258,6 +266,7 @@ namespace lemon {
 			lemon::io::io_service									&_service;
             std::string                                             _name;
             int                                                     _options;
+			lemon::fs::filepath										_workpath;
 		};
 
 	}

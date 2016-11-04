@@ -64,8 +64,8 @@ repo
 .vscode
 .repo
 
-log
 ik/log
 bin/iolua
 bin/lemon-test
 lemon/bin/
+log/

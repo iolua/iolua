@@ -7,7 +7,7 @@
 
 namespace iolua {
 
-    static auto& console = lemon::log::get("console");
+    static auto& console = lemon::log::get("iolua");
 
     static int init_task(lua_State *L) {
         luaL_openlibs(L);

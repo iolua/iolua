@@ -17,5 +17,9 @@ function module.run(path, ...)
     rootloader:run(path, ...)
 end
 
+function module.info(path)
+    local rootloader = sandbox("ik.loader")
+    return rootloader:info(path)
+end
 
 return module

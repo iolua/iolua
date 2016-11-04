@@ -64,9 +64,9 @@ namespace lemon{
 
             virtual ~reactor_io_object()
             {
-                reactor_io_service_unregister(_service,this);
-
                 ::close((int) _handler);
+
+                reactor_io_service_unregister(_service,this);
             }
 
             handler get() const

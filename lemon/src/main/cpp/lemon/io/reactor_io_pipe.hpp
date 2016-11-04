@@ -34,7 +34,7 @@ namespace lemon {
             {
                 auto fifo = std::string("/tmp/lemon-") + origin_name;
 
-                if(mkfifo(fifo.c_str(),S_IRWXU) && (errno!=EEXIST))
+                if(mkfifo(fifo.c_str(),S_IRUSR|S_IWUSR) && (errno!=EEXIST))
                 {
                     throw std::system_error(errno,std::system_category());
                 }
@@ -85,12 +85,12 @@ namespace lemon {
 
             void close_in()
             {
-                _in.reset();
+                if(_in) _in.reset();
             }
 
             void close_out()
             {
-                _out.reset();
+                if(_out)_out.reset();
             }
 
         private:
